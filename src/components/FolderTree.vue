@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { DirectoryNode } from "@/types/file-system";
 
 const props = defineProps<{
@@ -15,7 +15,12 @@ const emit = defineEmits<{
 const currentLevel = computed(() => props.level ?? 0);
 
 // Open details by default if it's root or first level
-const isOpen = computed(() => currentLevel.value < 2);
+const isOpen = ref(currentLevel.value < 2);
+
+const handleToggle = (e: Event) => {
+  const target = e.target as HTMLDetailsElement;
+  isOpen.value = target.open;
+};
 
 const handleSelect = (path: string) => {
   emit("select", path);
@@ -25,13 +30,13 @@ const handleSelect = (path: string) => {
 <template>
   <li class="w-full">
     <!-- If there are children directories -->
-    <details v-if="node.children.length > 0" :open="isOpen">
+    <details v-if="node.children.length > 0" :open="isOpen" @toggle="handleToggle">
       <summary
         class="cursor-pointer font-medium hover:bg-base-200"
         :class="{
           'bg-primary text-primary-content hover:bg-primary-focus': selectedPath === node.path,
         }"
-        @click.prevent="handleSelect(node.path)"
+        @click="handleSelect(node.path)"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
