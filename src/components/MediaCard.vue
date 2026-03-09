@@ -143,9 +143,9 @@ const handlePause = (e: Event) => {
       ></video>
     </template>
 
-    <!-- Overlay Info (Visible on hover) -->
+    <!-- Overlay Info (Always visible) -->
     <div
-      class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-white"
+      class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-8 pb-2 px-2 text-white flex flex-col justify-end"
     >
       <div class="flex items-center gap-1">
         <svg
