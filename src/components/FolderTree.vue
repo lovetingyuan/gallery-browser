@@ -32,10 +32,12 @@ const handleSelect = (path: string) => {
     <!-- If there are children directories -->
     <details v-if="node.children.length > 0" :open="isOpen" @toggle="handleToggle">
       <summary
-        class="cursor-pointer font-medium hover:bg-base-200"
-        :class="{
-          'bg-primary text-primary-content hover:bg-primary-focus': selectedPath === node.path,
-        }"
+        class="cursor-pointer font-medium"
+        :class="[
+          selectedPath === node.path
+            ? 'bg-primary text-primary-content hover:bg-primary'
+            : 'hover:bg-base-200',
+        ]"
         @click="handleSelect(node.path)"
       >
         <svg
@@ -70,8 +72,12 @@ const handleSelect = (path: string) => {
     <!-- If it's a leaf node (no children directories) -->
     <a
       v-else
-      class="cursor-pointer flex items-center gap-2 hover:bg-base-200"
-      :class="{ 'bg-primary text-primary-content hover:bg-primary': selectedPath === node.path }"
+      class="cursor-pointer flex items-center gap-2"
+      :class="[
+        selectedPath === node.path
+          ? 'bg-primary text-primary-content hover:bg-primary'
+          : 'hover:bg-base-200',
+      ]"
       @click="handleSelect(node.path)"
     >
       <svg
