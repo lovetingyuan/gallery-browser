@@ -126,7 +126,7 @@ const handlePause = (e: Event) => {
         v-if="file.type === 'image'"
         :src="objectUrl"
         :alt="file.name"
-        class="w-full h-full object-cover"
+        class="w-full h-full object-contain bg-base-300"
         loading="lazy"
       />
 
@@ -134,7 +134,7 @@ const handlePause = (e: Event) => {
       <video
         v-else-if="file.type === 'video'"
         :src="objectUrl"
-        class="w-full h-full object-cover"
+        class="w-full h-full object-contain bg-base-300"
         muted
         loop
         playsinline
