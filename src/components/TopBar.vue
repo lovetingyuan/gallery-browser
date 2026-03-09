@@ -16,9 +16,13 @@ const handleInput = (event: Event) => {
 </script>
 
 <template>
-  <div class="navbar bg-base-200 shadow-sm z-50">
-    <div class="flex-1">
-      <a class="btn btn-ghost text-xl normal-case flex items-center gap-2">
+  <div class="navbar bg-base-200 shadow-sm z-50 border-b border-base-200 p-0">
+    <div
+      class="w-64 md:w-80 flex-none px-4 flex items-center border-r border-base-200 self-stretch"
+    >
+      <a
+        class="btn btn-ghost text-xl normal-case flex items-center gap-2 text-primary whitespace-nowrap overflow-hidden text-ellipsis"
+      >
         <!-- Folder Icon -->
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -38,15 +42,31 @@ const handleInput = (event: Event) => {
       </a>
     </div>
 
-    <div class="flex-none gap-4 mr-4">
-      <div class="form-control">
-        <input
-          type="text"
-          placeholder="Search files..."
-          class="input input-bordered w-24 md:w-auto"
-          :value="searchQuery"
-          @input="handleInput"
-        />
+    <div class="flex-1 flex justify-end gap-4 px-4">
+      <div class="form-control w-full max-w-xs sm:max-w-md">
+        <div class="relative w-full">
+          <input
+            type="text"
+            placeholder="Search files..."
+            class="input input-bordered w-full pl-10"
+            :value="searchQuery"
+            @input="handleInput"
+          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
       </div>
 
       <button class="btn btn-primary" @click="onOpenDirectory" :disabled="isScanning">
