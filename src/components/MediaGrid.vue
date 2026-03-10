@@ -1,96 +1,99 @@
 <script setup lang="ts">
-import { computed, ref, watch, createApp, h, nextTick } from "vue";
+import { computed, ref, watch, createApp, h, nextTick, onMounted, onUnmounted } from "vue";
 import type { App } from "vue";
 import { Icon } from "@iconify/vue";
 import type { MediaFile } from "@/types/file-system";
 import MediaCard from "./MediaCard.vue";
 import LightboxMedia from "./LightboxMedia.vue";
 
-// lightGallery imports
-import Lightgallery from "lightgallery/vue";
-import lgZoom from "lightgallery/plugins/zoom";
-import lgVideo from "lightgallery/plugins/video";
-import "lightgallery/css/lightgallery.css";
-import "lightgallery/css/lg-zoom.css";
-import "lightgallery/css/lg-video.css";
+// GLightbox imports
+import GLightbox from "glightbox";
+import "glightbox/dist/css/glightbox.min.css";
+import type { GLightboxInstance } from "glightbox";
 
 const props = defineProps<{
   files: MediaFile[];
 }>();
 
 // Lightbox state
-const plugins = [lgZoom, lgVideo];
-let lgInstance: any = null;
+let lgInstance: GLightboxInstance | null = null;
 
 // Registry of dynamically mounted Vue instances for custom sources
 const mountedApps = new Map<number, App>();
 
-const onInit = (detail: any) => {
-  lgInstance = detail.instance;
-};
-
 const openLightbox = (index: number) => {
   if (lgInstance) {
-    // lgInstance.refresh is required when dynamic gallery is updated
-    lgInstance.refresh(lightboxSources.value);
-    lgInstance.openGallery(index);
+    lgInstance.setElements(lightboxSources.value);
+    lgInstance.openAt(index);
   }
 };
 
-// Map files to LightGallery dynamic source format
+// Map files to GLightbox dynamic source format
 const lightboxSources = computed(() => {
   return props.files.map((file, index) => {
-    // We don't use real src here to prevent memory leak
-    // Instead we use subHtml / html to mount our component
     return {
-      src: "", // Empty src to avoid default behavior
-      thumb: "",
-      // Provide a container ID that we will mount our component into
-      html: `<div id="lg-slide-container-${index}" class="lg-custom-slide-container w-full h-full"></div>`,
-      subHtml: `<h4>${file.name}</h4>`,
-      // Custom data to pass to event handlers
-      slideIndex: index,
+      content: `<div id="glightbox-slide-container-${index}" class="glightbox-custom-slide-container w-full h-full"></div>`,
+      width: "100vw",
+      height: "100vh",
+      title: file.name,
     };
   });
 });
 
-// Event handlers to manage lazy loading
-const onAfterAppendSlide = (detail: any) => {
-  const { index } = detail;
-  const containerId = `lg-slide-container-${index}`;
+onMounted(() => {
+  lgInstance = GLightbox({
+    touchNavigation: true,
+    loop: false,
+    zoomable: true,
+    draggable: true,
+  });
 
-  // Use nextTick to ensure the HTML from 'html' property is inserted into DOM
-  nextTick(() => {
-    const container = document.getElementById(containerId);
-    if (container && !mountedApps.has(index) && props.files[index]) {
-      const fileToMount = props.files[index];
-      if (!fileToMount) return;
+  lgInstance.on("slide_after_load", (data: any) => {
+    const { slideIndex } = data;
+    const containerId = `glightbox-slide-container-${slideIndex}`;
 
-      // Create a new Vue app instance for the LightboxMedia component
-      const app = createApp({
-        render() {
-          return h(LightboxMedia, { file: fileToMount });
-        },
-      });
+    nextTick(() => {
+      const container = document.getElementById(containerId);
+      if (container && !mountedApps.has(slideIndex) && props.files[slideIndex]) {
+        const fileToMount = props.files[slideIndex];
+        if (!fileToMount) return;
 
-      app.mount(container);
-      mountedApps.set(index, app);
+        // Create a new Vue app instance for the LightboxMedia component
+        const app = createApp({
+          render() {
+            return h(LightboxMedia, { file: fileToMount });
+          },
+        });
+
+        app.mount(container);
+        mountedApps.set(slideIndex, app);
+      }
+    });
+  });
+
+  lgInstance.on("slide_removed", (index: number) => {
+    // Unmount specific slide if glightbox removes it from DOM
+    const app = mountedApps.get(index);
+    if (app) {
+      app.unmount();
+      mountedApps.delete(index);
     }
   });
-};
 
-const onBeforeClose = () => {
-  // Unmount all dynamically created Vue instances when gallery closes
-  for (const [index, app] of mountedApps.entries()) {
-    app.unmount();
+  lgInstance.on("close", () => {
+    // Unmount all dynamically created Vue instances when gallery closes
+    for (const [index, app] of mountedApps.entries()) {
+      app.unmount();
+    }
+    mountedApps.clear();
+  });
+});
+
+onUnmounted(() => {
+  if (lgInstance) {
+    lgInstance.destroy();
   }
-  mountedApps.clear();
-};
-
-const onBeforeSlide = (detail: any) => {
-  // We can preload adjacent slides here if needed,
-  // but lightGallery will trigger onAfterAppendSlide for preloaded slides anyway
-};
+});
 
 // Simple pagination to avoid rendering 10,000 DOM elements at once
 // even if we have lazy loading, too many elements kill the browser
@@ -148,23 +151,6 @@ watch(
     <div v-if="displayLimit < files.length" class="flex justify-center p-4">
       <span class="loading loading-spinner text-primary"></span>
     </div>
-
-    <!-- Fullscreen Lightbox -->
-    <Lightgallery
-      :settings="{
-        dynamic: true,
-        dynamicEl: lightboxSources,
-        plugins: plugins,
-        speed: 500,
-        hideScrollbar: true,
-        download: false, // Custom component doesn't support built-in download easily without actual URLs
-        counter: true,
-      }"
-      @onInit="onInit"
-      @onAfterAppendSlide="onAfterAppendSlide"
-      @onBeforeClose="onBeforeClose"
-      @onBeforeSlide="onBeforeSlide"
-    />
   </div>
 </template>
 
@@ -181,7 +167,7 @@ watch(
 }
 
 /* Ensure custom slide container takes up full space */
-:deep(.lg-custom-slide-container) {
+:deep(.glightbox-custom-slide-container) {
   display: flex;
   align-items: center;
   justify-content: center;
