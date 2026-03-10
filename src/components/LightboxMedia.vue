@@ -85,16 +85,6 @@ onUnmounted(() => {
       ></video>
     </template>
 
-    <!-- Title overlay at the top -->
-    <div
-      v-if="!isLoading && !error"
-      class="absolute top-4 left-0 right-0 flex justify-center pointer-events-none opacity-50 hover:opacity-100 transition-opacity"
-    >
-      <div
-        class="bg-black/60 text-white text-sm px-4 py-2 rounded-full backdrop-blur-sm shadow-sm pointer-events-auto max-w-[80vw] truncate"
-      >
-        {{ file.name }}
-      </div>
-    </div>
+    <!-- Title overlay at the top (Removed based on user request) -->
   </div>
 </template>
