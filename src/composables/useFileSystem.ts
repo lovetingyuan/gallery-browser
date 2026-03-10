@@ -33,9 +33,15 @@ export function useFileSystem() {
 
   const getMediaType = (filename: string): MediaType => {
     const ext = filename.split(".").pop()?.toLowerCase();
-    if (!ext) return "unknown";
-    if (IMAGE_EXTENSIONS.has(ext)) return "image";
-    if (VIDEO_EXTENSIONS.has(ext)) return "video";
+    if (!ext) {
+      return "unknown";
+    }
+    if (IMAGE_EXTENSIONS.has(ext)) {
+      return "image";
+    }
+    if (VIDEO_EXTENSIONS.has(ext)) {
+      return "video";
+    }
     return "unknown";
   };
 

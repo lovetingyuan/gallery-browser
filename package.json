@@ -11,7 +11,7 @@
     "type-check": "vue-tsc --build",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
-    "lint": "oxlint --vue-plugin --fix .",
+    "lint": "oxlint -c .oxlintrc.json --vue-plugin --fix .",
     "format": "oxfmt ."
   },
   "dependencies": {

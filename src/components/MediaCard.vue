@@ -20,7 +20,9 @@ const containerRef = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
 
 const loadMedia = async () => {
-  if (objectUrl.value || isLoading.value || error.value) return;
+  if (objectUrl.value || isLoading.value || error.value) {
+    return;
+  }
 
   try {
     isLoading.value = true;

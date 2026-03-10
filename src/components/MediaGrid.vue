@@ -19,15 +19,26 @@ let lgInstance: GLightboxInstance | null = null;
 // Registry of dynamically created Object URLs
 const objectUrls = new Map<number, string>();
 
+// Custom zoom state
+let currentScale = 1;
+const zoomStep = 0.15;
+const maxScale = 5;
+const minScale = 0.1;
+
+let wheelListener: ((e: WheelEvent) => void) | null = null;
+
 // A transparent 1x1 base64 GIF as placeholder
-const transparentGif = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+const transparentGif =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 // Helper functions for metadata
 const formatBytes = (bytes: number, decimals = 2) => {
-  if (!+bytes) return '0 Bytes';
+  if (!+bytes) {
+    return "0 Bytes";
+  }
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
@@ -37,11 +48,138 @@ const formatDate = (timestamp: number) => {
   return d.toLocaleString();
 };
 
-
 const openLightbox = (index: number) => {
   if (lgInstance) {
     lgInstance.setElements(lightboxSources.value);
     lgInstance.openAt(index);
+  }
+};
+
+const updateZoom = () => {
+  const currentSlide = document.querySelector(".gslide.current");
+  if (!currentSlide) {
+    return;
+  }
+  const img = currentSlide.querySelector(".gslide-media img") as HTMLElement;
+  if (img) {
+    img.style.transform = `scale(${currentScale})`;
+    img.style.transition = "transform 0.15s ease-out";
+  }
+};
+
+const setupCustomZoom = () => {
+  const container = document.getElementById("glightbox-body");
+  if (!container) {
+    return;
+  }
+
+  // Add zoom buttons if they don't exist
+  let toolbar = container.querySelector(".gslide-description");
+  if (!toolbar) {
+    toolbar = container.querySelector(".ginner-container");
+  }
+
+  if (toolbar && !document.getElementById("custom-zoom-controls")) {
+    const controls = document.createElement("div");
+    controls.id = "custom-zoom-controls";
+    controls.className =
+      "absolute bottom-4 right-4 flex gap-2 bg-black/50 p-2 rounded-lg text-white pointer-events-auto";
+    controls.style.zIndex = "99999";
+    controls.innerHTML = `
+      <button id="zoom-out-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="缩小 (Mouse Wheel Down)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+      </button>
+      <div id="zoom-level-display" class="flex items-center justify-center w-12 text-sm font-medium">100%</div>
+      <button id="zoom-in-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="放大 (Mouse Wheel Up)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+      </button>
+      <button id="zoom-reset-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="重置">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+      </button>
+    `;
+    container.appendChild(controls);
+
+    const updateDisplay = () => {
+      const display = document.getElementById("zoom-level-display");
+      if (display) {
+        display.textContent = `${Math.round(currentScale * 100)}%`;
+      }
+      updateZoom();
+    };
+
+    document.getElementById("zoom-in-btn")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (currentScale < maxScale) {
+        currentScale += zoomStep;
+        updateDisplay();
+      }
+    });
+
+    document.getElementById("zoom-out-btn")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (currentScale > minScale) {
+        currentScale -= zoomStep;
+        updateDisplay();
+      }
+    });
+
+    document.getElementById("zoom-reset-btn")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      currentScale = 1;
+      updateDisplay();
+    });
+  }
+
+  const updateDisplay = () => {
+    const display = document.getElementById("zoom-level-display");
+    if (display) {
+      display.textContent = `${Math.round(currentScale * 100)}%`;
+    }
+    updateZoom();
+  };
+
+  if (!wheelListener) {
+    wheelListener = (e: WheelEvent) => {
+      const isLightboxOpen = document.body.classList.contains("glightbox-open");
+      if (!isLightboxOpen) {
+        return;
+      }
+
+      const currentSlide = document.querySelector(".gslide.current");
+      if (!currentSlide) {
+        return;
+      }
+
+      const mediaNode = currentSlide.querySelector(".gslide-media img");
+      if (!mediaNode) {
+        return;
+      } // Only zoom images
+
+      e.preventDefault();
+
+      if (e.deltaY < 0) {
+        if (currentScale < maxScale) {
+          currentScale += zoomStep;
+        }
+      } else {
+        if (currentScale > minScale) {
+          currentScale -= zoomStep;
+        }
+        // ensure exact 1.0 is easily reached
+        if (Math.abs(currentScale - 1) < zoomStep) {
+          // snap to 1 if close
+          if (currentScale > 1 && e.deltaY > 0) {
+            currentScale = 1;
+          }
+          if (currentScale < 1 && e.deltaY < 0) {
+            currentScale = 1;
+          }
+        }
+      }
+
+      updateDisplay();
+    };
+    window.addEventListener("wheel", wheelListener, { passive: false });
   }
 };
 
@@ -72,11 +210,39 @@ onMounted(() => {
     draggable: true,
   });
 
+  lgInstance.on("slide_changed", () => {
+    currentScale = 1;
+    const display = document.getElementById("zoom-level-display");
+    if (display) {
+      display.textContent = "100%";
+    }
+    const currentSlide = document.querySelector(".gslide.current");
+    if (currentSlide) {
+      const img = currentSlide.querySelector(".gslide-media img") as HTMLElement;
+      if (img) {
+        img.style.transform = `scale(1)`;
+      }
+    }
+  });
+
+  lgInstance.on("open", () => {
+    currentScale = 1;
+    setTimeout(() => {
+      setupCustomZoom();
+    }, 100);
+  });
+
   lgInstance.on("slide_after_load", async (data: any) => {
     const { slideIndex, slideNode } = data;
     const fileToLoad = props.files[slideIndex];
 
-    if (!fileToLoad || objectUrls.has(slideIndex)) return;
+    if (!fileToLoad || objectUrls.has(slideIndex)) {
+      // even if cached, when loaded we might need to apply custom zoom
+      if (currentScale !== 1) {
+        setTimeout(updateZoom, 50);
+      }
+      return;
+    }
 
     try {
       // Lazy load the actual file
@@ -88,7 +254,7 @@ onMounted(() => {
       const dateStr = formatDate(file.lastModified);
 
       const updateMeta = (resolution: string) => {
-        const metaEl = slideNode.querySelector('.media-meta');
+        const metaEl = slideNode.querySelector(".media-meta");
         if (metaEl) {
           metaEl.innerHTML = `
             <div>分辨率: ${resolution}</div>
@@ -102,21 +268,29 @@ onMounted(() => {
       if (fileToLoad.type === "image") {
         const img = slideNode.querySelector("img");
         if (img) {
-          img.addEventListener('load', () => {
-            updateMeta(`${img.naturalWidth} × ${img.naturalHeight}`);
-            // Refresh glightbox image zoom state if naturalWidth > offsetWidth
-            if (img.naturalWidth > img.offsetWidth) {
-              img.classList.add('zoomable');
-            }
-          }, { once: true });
+          img.addEventListener(
+            "load",
+            () => {
+              updateMeta(`${img.naturalWidth} × ${img.naturalHeight}`);
+              // Refresh glightbox image zoom state if naturalWidth > offsetWidth
+              if (img.naturalWidth > img.offsetWidth) {
+                img.classList.add("zoomable");
+              }
+            },
+            { once: true },
+          );
           img.src = objectUrl;
         }
       } else if (fileToLoad.type === "video") {
         const video = slideNode.querySelector("video.gvideo-local");
         if (video) {
-          video.addEventListener('loadedmetadata', () => {
-            updateMeta(`${video.videoWidth} × ${video.videoHeight}`);
-          }, { once: true });
+          video.addEventListener(
+            "loadedmetadata",
+            () => {
+              updateMeta(`${video.videoWidth} × ${video.videoHeight}`);
+            },
+            { once: true },
+          );
           video.src = objectUrl;
           video.load();
         } else {
@@ -124,9 +298,13 @@ onMounted(() => {
           if (source) {
             const parentVideo = source.parentElement as HTMLVideoElement;
             if (parentVideo) {
-              parentVideo.addEventListener('loadedmetadata', () => {
-                updateMeta(`${parentVideo.videoWidth} × ${parentVideo.videoHeight}`);
-              }, { once: true });
+              parentVideo.addEventListener(
+                "loadedmetadata",
+                () => {
+                  updateMeta(`${parentVideo.videoWidth} × ${parentVideo.videoHeight}`);
+                },
+                { once: true },
+              );
             }
             source.src = objectUrl;
             if (parentVideo) {
@@ -137,8 +315,10 @@ onMounted(() => {
       }
     } catch (err) {
       console.error("Failed to lazy load media for lightbox:", err);
-      const metaEl = slideNode.querySelector('.media-meta');
-      if (metaEl) metaEl.innerHTML = "加载信息失败";
+      const metaEl = slideNode.querySelector(".media-meta");
+      if (metaEl) {
+        metaEl.innerHTML = "加载信息失败";
+      }
     }
   });
 
@@ -157,10 +337,14 @@ onMounted(() => {
       URL.revokeObjectURL(url);
     }
     objectUrls.clear();
+    currentScale = 1;
   });
 });
 
 onUnmounted(() => {
+  if (wheelListener) {
+    window.removeEventListener("wheel", wheelListener);
+  }
   if (lgInstance) {
     lgInstance.destroy();
   }
