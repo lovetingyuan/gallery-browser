@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { Icon } from "@iconify/vue";
 import type { DirectoryNode } from "@/types/file-system";
 
 const props = defineProps<{
@@ -40,20 +41,7 @@ const handleSelect = (path: string) => {
         ]"
         @click="handleSelect(node.path)"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4 mr-1 opacity-70"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-          />
-        </svg>
+        <Icon icon="heroicons-outline:folder" class="h-4 w-4 mr-1 opacity-70" />
         <span class="truncate" :title="node.name">{{ node.name || "Root" }}</span>
       </summary>
       <ul>
@@ -80,20 +68,7 @@ const handleSelect = (path: string) => {
       ]"
       @click="handleSelect(node.path)"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-4 w-4 opacity-70"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-        />
-      </svg>
+      <Icon icon="heroicons-outline:folder" class="h-4 w-4 opacity-70" />
       <span class="truncate" :title="node.name">{{ node.name }}</span>
     </a>
   </li>

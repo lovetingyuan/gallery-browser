@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Icon } from "@iconify/vue";
 import { useFileSystem } from "@/composables/useFileSystem";
 import TopBar from "@/components/TopBar.vue";
 import FolderTree from "@/components/FolderTree.vue";
@@ -39,20 +40,7 @@ const {
           </ul>
 
           <div v-else-if="!isScanning" class="p-4 text-center text-base-content/50 mt-10">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-12 w-12 mx-auto mb-4 opacity-50"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-              />
-            </svg>
+            <Icon icon="heroicons-outline:folder" class="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p class="text-sm">Click "Select Folder" to choose a local folder.</p>
           </div>
 
@@ -72,19 +60,7 @@ const {
 
       <div v-if="error" class="toast toast-bottom toast-end z-50">
         <div class="alert alert-error">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <Icon icon="heroicons-outline:x-circle" class="stroke-current shrink-0 h-6 w-6" />
           <span>{{ error }}</span>
         </div>
       </div>

@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
+import { Icon } from "@iconify/vue";
 import type { MediaFile } from "@/types/file-system";
 
 const props = defineProps<{
   file: MediaFile;
+}>();
+
+defineEmits<{
+  (e: "click"): void;
 }>();
 
 const isVisible = ref(false);
@@ -91,6 +96,7 @@ const handlePause = (e: Event) => {
   <div
     ref="containerRef"
     class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden h-48 md:h-64 relative group cursor-pointer transition-transform hover:scale-[1.02]"
+    @click="$emit('click')"
   >
     <!-- Loading State -->
     <div v-if="isLoading" class="absolute inset-0 flex items-center justify-center bg-base-200">
@@ -102,20 +108,7 @@ const handlePause = (e: Event) => {
       v-else-if="error"
       class="absolute inset-0 flex flex-col items-center justify-center bg-base-200 text-error p-4 text-center"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-8 w-8 mb-2"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
+      <Icon icon="heroicons-outline:exclamation-circle" class="h-8 w-8 mb-2" />
       <span class="text-xs">{{ error }}</span>
     </div>
 
@@ -145,39 +138,11 @@ const handlePause = (e: Event) => {
 
     <!-- Overlay Info (Always visible) -->
     <div
-      class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-8 pb-2 px-2 text-white flex flex-col justify-end"
+      class="absolute inset-x-0 top-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent pb-8 pt-2 px-2 text-white flex flex-col justify-start"
     >
       <div class="flex items-center gap-1">
-        <svg
-          v-if="file.type === 'video'"
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-          />
-        </svg>
-        <svg
-          v-else
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
+        <Icon v-if="file.type === 'video'" icon="heroicons-outline:video-camera" class="h-4 w-4" />
+        <Icon v-else icon="heroicons-outline:photograph" class="h-4 w-4" />
         <span class="text-xs truncate" :title="file.name">{{ file.name }}</span>
       </div>
     </div>

@@ -22,6 +22,22 @@ const objectUrls = new Map<number, string>();
 // A transparent 1x1 base64 GIF as placeholder
 const transparentGif = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
+// Helper functions for metadata
+const formatBytes = (bytes: number, decimals = 2) => {
+  if (!+bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+};
+
+const formatDate = (timestamp: number) => {
+  const d = new Date(timestamp);
+  return d.toLocaleString();
+};
+
+
 const openLightbox = (index: number) => {
   if (lgInstance) {
     lgInstance.setElements(lightboxSources.value);
@@ -36,7 +52,13 @@ const lightboxSources = computed(() => {
     return {
       href: file.type === "image" ? transparentGif : "",
       type: file.type === "image" ? "image" : "video",
-      title: file.name,
+      title: "",
+      description: `<div class="text-left flex flex-col text-sm leading-tight">
+        <div class="font-medium break-all mb-1">${file.name}</div>
+        <div class="media-meta flex flex-col text-xs opacity-90 leading-tight gap-0.5">
+          <div>加载中...</div>
+        </div>
+      </div>`,
       videoProvider: file.type === "video" ? "local" : undefined,
     };
   });
@@ -53,7 +75,7 @@ onMounted(() => {
   lgInstance.on("slide_after_load", async (data: any) => {
     const { slideIndex, slideNode } = data;
     const fileToLoad = props.files[slideIndex];
-    
+
     if (!fileToLoad || objectUrls.has(slideIndex)) return;
 
     try {
@@ -62,34 +84,61 @@ onMounted(() => {
       const objectUrl = URL.createObjectURL(file);
       objectUrls.set(slideIndex, objectUrl);
 
+      const sizeStr = formatBytes(file.size);
+      const dateStr = formatDate(file.lastModified);
+
+      const updateMeta = (resolution: string) => {
+        const metaEl = slideNode.querySelector('.media-meta');
+        if (metaEl) {
+          metaEl.innerHTML = `
+            <div>分辨率: ${resolution}</div>
+            <div>大小: ${sizeStr}</div>
+            <div>日期: ${dateStr}</div>
+          `;
+        }
+      };
+
       // Find the inner image or video element
       if (fileToLoad.type === "image") {
         const img = slideNode.querySelector("img");
         if (img) {
+          img.addEventListener('load', () => {
+            updateMeta(`${img.naturalWidth} × ${img.naturalHeight}`);
+            // Refresh glightbox image zoom state if naturalWidth > offsetWidth
+            if (img.naturalWidth > img.offsetWidth) {
+              img.classList.add('zoomable');
+            }
+          }, { once: true });
           img.src = objectUrl;
-          // Refresh glightbox image zoom state if naturalWidth > offsetWidth
-          if (img.naturalWidth > img.offsetWidth) {
-            img.classList.add('zoomable');
-          }
         }
       } else if (fileToLoad.type === "video") {
         const video = slideNode.querySelector("video.gvideo-local");
         if (video) {
+          video.addEventListener('loadedmetadata', () => {
+            updateMeta(`${video.videoWidth} × ${video.videoHeight}`);
+          }, { once: true });
           video.src = objectUrl;
           video.load();
         } else {
-            const source = slideNode.querySelector("source");
-            if (source) {
-                source.src = objectUrl;
-                const parentVideo = source.parentElement as HTMLVideoElement;
-                if (parentVideo) {
-                    parentVideo.load();
-                }
+          const source = slideNode.querySelector("source");
+          if (source) {
+            const parentVideo = source.parentElement as HTMLVideoElement;
+            if (parentVideo) {
+              parentVideo.addEventListener('loadedmetadata', () => {
+                updateMeta(`${parentVideo.videoWidth} × ${parentVideo.videoHeight}`);
+              }, { once: true });
             }
+            source.src = objectUrl;
+            if (parentVideo) {
+              parentVideo.load();
+            }
+          }
         }
       }
     } catch (err) {
       console.error("Failed to lazy load media for lightbox:", err);
+      const metaEl = slideNode.querySelector('.media-meta');
+      if (metaEl) metaEl.innerHTML = "加载信息失败";
     }
   });
 
@@ -180,9 +229,11 @@ watch(
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(156, 163, 175, 0.5);
   border-radius: 4px;

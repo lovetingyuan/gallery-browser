@@ -63,13 +63,14 @@ _注意_：目前没有配置明确的单元测试运行器。如果被要求添
 - 在 `<script setup>` 中始终使用 `.value` 解包 `ref`，但**绝对不要**在 `<template>` 中这样做。
 - 将复杂的业务逻辑保留在组件之外。使用 composables 来提取状态和逻辑。
 
-## 7. UI, 样式与 DaisyUI
+## 7. UI, 样式，图标与 DaisyUI
 
 - 使用 **Tailwind V4** 实用类结合 **DaisyUI V5** 组件类。
 - 依赖 DaisyUI 的语义化类 (例如 `btn`, `btn-primary`, `card`, `modal`, `grid`) 来快速、一致地构建 UI。
 - 除非绝对必要，否则不要在 `<style scoped>` 中编写自定义 CSS 来覆盖行为或创建 Tailwind 未涵盖的动画。
 - 确保应用程序完全响应式。首先使用 Tailwind 的 `md:`, `lg:` 断点测试移动端布局。
 - 如果接到指令，通过 DaisyUI 的主题处理动态支持深色/浅色模式。
+- 图标采用 https://iconify.design/docs/icon-components/vue/ 方案，不要自己编写svg
 
 ## 8. 错误处理与状态
 
