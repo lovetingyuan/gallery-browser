@@ -7,12 +7,19 @@ const props = defineProps<{
   isScanning: boolean;
   availableExtensions: string[];
   selectedExtensions: string[];
+  gridSize: number;
 }>();
 
 const emit = defineEmits<{
   "update:searchQuery": [value: string];
   "update:selectedExtensions": [value: string[]];
+  "update:gridSize": [value: number];
 }>();
+
+const handleGridSizeInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  emit("update:gridSize", Number(target.value));
+};
 
 const handleInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -61,13 +68,25 @@ const toggleExtension = (ext: string) => {
             />
           </div>
         </div>
+        <div class="hidden sm:flex items-center gap-2 px-2">
+          <Icon icon="heroicons-outline:view-grid" class="h-5 w-5 text-base-content/70" />
+          <input
+            type="range"
+            min="100"
+            max="400"
+            :value="gridSize"
+            @input="handleGridSizeInput"
+            class="range range-xs range-primary w-24"
+          />
+        </div>
+
         <div class="dropdown dropdown-end" v-if="availableExtensions.length > 0">
           <div tabindex="0" role="button" class="btn btn-square btn-outline">
             <Icon icon="heroicons-outline:funnel" class="h-5 w-5" />
           </div>
           <ul
             tabindex="0"
-            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52 max-h-60 overflow-y-auto"
+            class="dropdown-content z-1 menu p-2 shadow bg-base-100 rounded-box w-52 max-h-60 overflow-y-auto"
           >
             <li v-for="ext in availableExtensions" :key="ext">
               <label class="label cursor-pointer flex justify-start gap-3 p-2">

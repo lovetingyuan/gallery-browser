@@ -97,7 +97,7 @@ const handlePause = (e: Event) => {
 <template>
   <div
     ref="containerRef"
-    class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden h-48 md:h-64 relative group cursor-pointer transition-transform hover:scale-[1.02]"
+    class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden aspect-square relative group cursor-pointer transition-transform hover:scale-[1.02]"
     @click="$emit('click')"
   >
     <!-- Loading State -->

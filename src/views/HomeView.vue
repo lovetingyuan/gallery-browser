@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { Icon } from "@iconify/vue";
 import { useFileSystem } from "@/composables/useFileSystem";
 import TopBar from "@/components/TopBar.vue";
 import FolderTree from "@/components/FolderTree.vue";
 import MediaGrid from "@/components/MediaGrid.vue";
+
+const gridSize = ref(200);
 
 const {
   isScanning,
@@ -26,8 +29,10 @@ const {
       :search-query="searchQuery"
       :available-extensions="availableExtensions"
       :selected-extensions="selectedExtensions"
+      :grid-size="gridSize"
       @update:search-query="searchQuery = $event"
       @update:selected-extensions="selectedExtensions = $event"
+      @update:grid-size="gridSize = $event"
       @open-directory="openDirectory"
     />
 
@@ -60,7 +65,7 @@ const {
       </aside>
 
       <main class="flex-1 bg-base-200/50 overflow-hidden relative">
-        <MediaGrid :files="filteredFiles" />
+        <MediaGrid :files="filteredFiles" :grid-size="gridSize" />
       </main>
 
       <div v-if="error" class="toast toast-bottom toast-end z-50">
