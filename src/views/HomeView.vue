@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { useFileSystem } from "@/composables/useFileSystem";
 import TopBar from "@/components/TopBar.vue";
 import FolderTree from "@/components/FolderTree.vue";
 import MediaGrid from "@/components/MediaGrid.vue";
 
-const gridSize = ref(200);
+const savedGridSize = localStorage.getItem("gallery-grid-size");
+const gridSize = ref(savedGridSize ? Number(savedGridSize) : 200);
+
+watch(gridSize, (newVal) => {
+  localStorage.setItem("gallery-grid-size", newVal.toString());
+});
 
 const {
   isScanning,
