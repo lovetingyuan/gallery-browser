@@ -5,15 +5,28 @@ const props = defineProps<{
   onOpenDirectory: () => void;
   searchQuery: string;
   isScanning: boolean;
+  availableExtensions: string[];
+  selectedExtensions: string[];
 }>();
 
 const emit = defineEmits<{
   "update:searchQuery": [value: string];
+  "update:selectedExtensions": [value: string[]];
 }>();
 
 const handleInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
   emit("update:searchQuery", target.value);
+};
+
+const toggleExtension = (ext: string) => {
+  const current = new Set(props.selectedExtensions);
+  if (current.has(ext)) {
+    current.delete(ext);
+  } else {
+    current.add(ext);
+  }
+  emit("update:selectedExtensions", Array.from(current));
 };
 </script>
 
@@ -31,24 +44,47 @@ const handleInput = (event: Event) => {
       </a>
     </div>
 
-    <div class="flex-1 flex justify-end gap-4 px-4">
-      <div class="form-control w-full max-w-xs sm:max-w-md">
-        <div class="relative w-full">
-          <input
-            type="text"
-            placeholder="Search files..."
-            class="input input-bordered w-full pl-10"
-            :value="searchQuery"
-            @input="handleInput"
-          />
-          <Icon
-            icon="heroicons-outline:search"
-            class="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50"
-          />
+    <div class="flex-1 flex justify-end gap-4 px-4 items-center">
+      <div class="flex gap-2 w-full max-w-xs sm:max-w-md items-center">
+        <div class="form-control flex-1">
+          <div class="relative w-full">
+            <input
+              type="text"
+              placeholder="Search files..."
+              class="input input-bordered w-full pl-10"
+              :value="searchQuery"
+              @input="handleInput"
+            />
+            <Icon
+              icon="heroicons-outline:search"
+              class="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50"
+            />
+          </div>
+        </div>
+        <div class="dropdown dropdown-end" v-if="availableExtensions.length > 0">
+          <div tabindex="0" role="button" class="btn btn-square btn-outline">
+            <Icon icon="heroicons-outline:funnel" class="h-5 w-5" />
+          </div>
+          <ul
+            tabindex="0"
+            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52 max-h-60 overflow-y-auto"
+          >
+            <li v-for="ext in availableExtensions" :key="ext">
+              <label class="label cursor-pointer flex justify-start gap-3 p-2">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-sm"
+                  :checked="selectedExtensions.includes(ext)"
+                  @change="toggleExtension(ext)"
+                />
+                <span class="label-text">.{{ ext }}</span>
+              </label>
+            </li>
+          </ul>
         </div>
       </div>
 
-      <button class="btn btn-primary" @click="onOpenDirectory" :disabled="isScanning">
+      <button class="btn btn-primary shrink-0" @click="onOpenDirectory" :disabled="isScanning">
         <span v-if="isScanning" class="loading loading-spinner"></span>
         <Icon v-else icon="heroicons-outline:folder-open" class="h-5 w-5 mr-1" />
         Select Folder

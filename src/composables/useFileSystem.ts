@@ -27,6 +27,18 @@ export function useFileSystem() {
   const allMediaFiles = shallowRef<MediaFile[]>([]);
   const selectedDirectoryPath = ref<string | null>(null);
   const searchQuery = ref("");
+  const selectedExtensions = ref<string[]>([]);
+
+  const availableExtensions = computed(() => {
+    const exts = new Set<string>();
+    allMediaFiles.value.forEach((file) => {
+      const parts = file.name.split(".");
+      if (parts.length > 1) {
+        exts.add(parts.pop()!.toLowerCase());
+      }
+    });
+    return Array.from(exts).sort();
+  });
 
   const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif", "svg"]);
   const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "ogg", "mov"]);
@@ -107,6 +119,7 @@ export function useFileSystem() {
       allMediaFiles.value = [];
       rootNode.value = null;
       selectedDirectoryPath.value = null;
+      selectedExtensions.value = [];
 
       const { node, files } = await traverseDirectory(dirHandle, "");
 
@@ -141,6 +154,17 @@ export function useFileSystem() {
       files = files.filter((f) => f.path.startsWith(selectedDirectoryPath.value!));
     }
 
+    if (selectedExtensions.value.length > 0) {
+      files = files.filter((f) => {
+        const parts = f.name.split(".");
+        if (parts.length > 1) {
+          const ext = parts.pop()!.toLowerCase();
+          return selectedExtensions.value.includes(ext);
+        }
+        return false;
+      });
+    }
+
     return files;
   });
 
@@ -151,6 +175,8 @@ export function useFileSystem() {
     allMediaFiles,
     selectedDirectoryPath,
     searchQuery,
+    selectedExtensions,
+    availableExtensions,
     filteredFiles,
     openDirectory,
     selectDirectory,

@@ -11,6 +11,8 @@ const {
   rootNode,
   searchQuery,
   selectedDirectoryPath,
+  selectedExtensions,
+  availableExtensions,
   filteredFiles,
   openDirectory,
   selectDirectory,
@@ -22,7 +24,10 @@ const {
     <TopBar
       :is-scanning="isScanning"
       :search-query="searchQuery"
+      :available-extensions="availableExtensions"
+      :selected-extensions="selectedExtensions"
       @update:search-query="searchQuery = $event"
+      @update:selected-extensions="selectedExtensions = $event"
       @open-directory="openDirectory"
     />
 
