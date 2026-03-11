@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
+import type { SortOption } from "@/composables/useFileSystem";
 
 const props = defineProps<{
   onOpenDirectory: () => void;
@@ -8,17 +9,24 @@ const props = defineProps<{
   availableExtensions: string[];
   selectedExtensions: string[];
   gridSize: number;
+  sortBy: SortOption;
 }>();
 
 const emit = defineEmits<{
   "update:searchQuery": [value: string];
   "update:selectedExtensions": [value: string[]];
   "update:gridSize": [value: number];
+  "update:sortBy": [value: SortOption];
 }>();
 
 const handleGridSizeInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
   emit("update:gridSize", Number(target.value));
+};
+
+const handleSortChange = (event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  emit("update:sortBy", target.value as SortOption);
 };
 
 const handleInput = (event: Event) => {
@@ -78,6 +86,21 @@ const toggleExtension = (ext: string) => {
             @input="handleGridSizeInput"
             class="range range-xs range-primary w-24"
           />
+        </div>
+
+        <div class="hidden sm:flex">
+          <select
+            class="select select-bordered select-sm max-w-xs"
+            :value="sortBy"
+            @change="handleSortChange"
+          >
+            <option value="time_desc">Newest First</option>
+            <option value="time_asc">Oldest First</option>
+            <option value="size_desc">Largest First</option>
+            <option value="size_asc">Smallest First</option>
+            <option value="name_asc">Name (A-Z)</option>
+            <option value="name_desc">Name (Z-A)</option>
+          </select>
         </div>
 
         <div class="dropdown dropdown-end" v-if="availableExtensions.length > 0">

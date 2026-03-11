@@ -23,6 +23,8 @@ export interface MediaFile {
   type: MediaType;
   handle: FileSystemFileHandle;
   path: string; // Virtual path
+  size?: number;
+  lastModified?: number;
 }
 
 export interface DirectoryNode {

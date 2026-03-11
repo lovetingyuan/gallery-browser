@@ -18,6 +18,14 @@ declare global {
   }
 }
 
+export type SortOption =
+  | "name_asc"
+  | "name_desc"
+  | "time_desc"
+  | "time_asc"
+  | "size_desc"
+  | "size_asc";
+
 export function useFileSystem() {
   const isScanning = ref(false);
   const error = ref<string | null>(null);
@@ -28,6 +36,7 @@ export function useFileSystem() {
   const selectedDirectoryPath = ref<string | null>(null);
   const searchQuery = ref("");
   const selectedExtensions = ref<string[]>([]);
+  const sortBy = ref<SortOption>("time_desc");
 
   const availableExtensions = computed(() => {
     const exts = new Set<string>();
@@ -72,33 +81,60 @@ export function useFileSystem() {
 
     let collectedFiles: MediaFile[] = [];
 
+    const fileEntries: FileSystemFileHandle[] = [];
+    const dirEntries: FileSystemDirectoryHandle[] = [];
+
     for await (const entry of dirHandle.values()) {
       if (entry.kind === "file") {
         const fileHandle = entry as FileSystemFileHandle;
-        const mediaType = getMediaType(fileHandle.name);
-
-        if (mediaType !== "unknown") {
-          const file: MediaFile = {
-            id: `${currentPath}/${fileHandle.name}`,
-            name: fileHandle.name,
-            type: mediaType,
-            handle: fileHandle,
-            path: currentPath,
-          };
-          node.files.push(file);
-          collectedFiles.push(file);
+        if (getMediaType(fileHandle.name) !== "unknown") {
+          fileEntries.push(fileHandle);
         }
       } else if (entry.kind === "directory") {
-        const childDirHandle = entry as FileSystemDirectoryHandle;
-        const { node: childNode, files: childFiles } = await traverseDirectory(
-          childDirHandle,
-          currentPath,
-        );
-        if (childNode.children.length > 0 || childNode.files.length > 0) {
-          node.children.push(childNode);
-        }
-        collectedFiles = collectedFiles.concat(childFiles);
+        dirEntries.push(entry as FileSystemDirectoryHandle);
       }
+    }
+
+    // Process files concurrently for fast metadata extraction
+    const filePromises = fileEntries.map(async (fileHandle) => {
+      const mediaType = getMediaType(fileHandle.name);
+      let size = 0;
+      let lastModified = 0;
+      try {
+        const fileData = await fileHandle.getFile();
+        size = fileData.size;
+        lastModified = fileData.lastModified;
+      } catch (e) {
+        console.warn(`Could not read metadata for ${fileHandle.name}`, e);
+      }
+
+      return {
+        id: `${currentPath}/${fileHandle.name}`,
+        name: fileHandle.name,
+        type: mediaType,
+        handle: fileHandle,
+        path: currentPath,
+        size,
+        lastModified,
+      } as MediaFile;
+    });
+
+    const resolvedFiles = await Promise.all(filePromises);
+    for (const file of resolvedFiles) {
+      node.files.push(file);
+      collectedFiles.push(file);
+    }
+
+    // Process subdirectories sequentially to avoid too many open file handles
+    for (const childDirHandle of dirEntries) {
+      const { node: childNode, files: childFiles } = await traverseDirectory(
+        childDirHandle,
+        currentPath,
+      );
+      if (childNode.children.length > 0 || childNode.files.length > 0) {
+        node.children.push(childNode);
+      }
+      collectedFiles = collectedFiles.concat(childFiles);
     }
 
     return { node, files: collectedFiles };
@@ -165,6 +201,25 @@ export function useFileSystem() {
       });
     }
 
+    // Sort files
+    files = [...files].sort((a, b) => {
+      switch (sortBy.value) {
+        case "name_asc":
+          return a.name.localeCompare(b.name);
+        case "name_desc":
+          return b.name.localeCompare(a.name);
+        case "size_desc":
+          return (b.size || 0) - (a.size || 0);
+        case "size_asc":
+          return (a.size || 0) - (b.size || 0);
+        case "time_asc":
+          return (a.lastModified || 0) - (b.lastModified || 0);
+        case "time_desc":
+        default:
+          return (b.lastModified || 0) - (a.lastModified || 0);
+      }
+    });
+
     return files;
   });
 
@@ -176,6 +231,7 @@ export function useFileSystem() {
     selectedDirectoryPath,
     searchQuery,
     selectedExtensions,
+    sortBy,
     availableExtensions,
     filteredFiles,
     openDirectory,

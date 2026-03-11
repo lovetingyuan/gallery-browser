@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { Icon } from "@iconify/vue";
 import type { MediaFile } from "@/types/file-system";
 
@@ -92,12 +92,43 @@ const handlePause = (e: Event) => {
   const video = e.target as HTMLVideoElement;
   video.pause();
 };
+
+const formatSize = (bytes?: number) => {
+  if (bytes === undefined) {
+    return "Unknown size";
+  }
+  if (bytes === 0) {
+    return "0 B";
+  }
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+};
+
+const formatDate = (timestamp?: number) => {
+  if (!timestamp) {
+    return "Unknown date";
+  }
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const tooltipText = computed(() => {
+  return `${props.file.name}\nSize: ${formatSize(props.file.size)}\nModified: ${formatDate(props.file.lastModified)}`;
+});
 </script>
 
 <template>
   <div
     ref="containerRef"
     class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden aspect-square relative group cursor-pointer transition-transform hover:scale-[1.02]"
+    :title="tooltipText"
     @click="$emit('click')"
   >
     <!-- Loading State -->

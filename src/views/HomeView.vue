@@ -15,6 +15,7 @@ const {
   searchQuery,
   selectedDirectoryPath,
   selectedExtensions,
+  sortBy,
   availableExtensions,
   filteredFiles,
   openDirectory,
@@ -30,9 +31,11 @@ const {
       :available-extensions="availableExtensions"
       :selected-extensions="selectedExtensions"
       :grid-size="gridSize"
+      :sort-by="sortBy"
       @update:search-query="searchQuery = $event"
       @update:selected-extensions="selectedExtensions = $event"
       @update:grid-size="gridSize = $event"
+      @update:sort-by="sortBy = $event"
       @open-directory="openDirectory"
     />
 
