@@ -3,6 +3,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { Icon } from "@iconify/vue";
 import type { MediaFile } from "@/types/file-system";
 import MediaCard from "./MediaCard.vue";
+import { useVirtualList, useElementSize } from "@vueuse/core";
 
 // GLightbox imports
 import GLightbox from "glightbox";
@@ -351,37 +352,42 @@ onUnmounted(() => {
   }
 });
 
-// Simple pagination to avoid rendering 10,000 DOM elements at once
-// even if we have lazy loading, too many elements kill the browser
-const displayLimit = ref(50);
-
-const handleScroll = (e: Event) => {
-  const target = e.target as HTMLElement;
-  const { scrollTop, clientHeight, scrollHeight } = target;
-
-  // If close to bottom (within 200px)
-  if (scrollHeight - scrollTop - clientHeight < 200) {
-    if (displayLimit.value < props.files.length) {
-      displayLimit.value += 50;
-    }
-  }
-};
-
-const displayedFiles = computed(() => {
-  return props.files.slice(0, displayLimit.value);
+// Virtual List setup
+const columns = computed(() => {
+  if (!containerWidth.value) {return 1;}
+  const availableWidth = containerWidth.value - 32; // p-4 adds 16px padding on left/right
+  const cols = Math.floor((availableWidth + 16) / (props.gridSize + 16));
+  return Math.max(1, cols);
 });
 
-// Watch for file changes to reset limit
-watch(
-  () => props.files,
-  () => {
-    displayLimit.value = 50;
-  },
-);
+const rowHeight = computed(() => {
+  if (!containerWidth.value) {return props.gridSize + 16;}
+  const availableWidth = containerWidth.value - 32;
+  const cols = columns.value;
+  const itemWidth = (availableWidth - (cols - 1) * 16) / cols;
+  return itemWidth + 16; // aspect-square item height + 16px row gap
+});
+
+const rows = computed(() => {
+  const result = [];
+  const cols = columns.value;
+  for (let i = 0; i < props.files.length; i += cols) {
+    result.push(props.files.slice(i, i + cols));
+  }
+  return result;
+});
+
+const { list, containerProps, wrapperProps } = useVirtualList(rows, {
+  itemHeight: () => rowHeight.value,
+  overscan: 5,
+});
+
+const { width: containerWidth } = useElementSize(containerProps.ref);
+
 </script>
 
 <template>
-  <div class="h-full overflow-y-auto p-4 custom-scrollbar" @scroll="handleScroll">
+  <div v-bind="containerProps" class="h-full overflow-y-auto p-4 custom-scrollbar">
     <div
       v-if="files.length === 0"
       class="flex flex-col items-center justify-center h-full text-base-content/50"
@@ -391,22 +397,23 @@ watch(
       <p class="text-sm">Select a directory or adjust your search.</p>
     </div>
 
-    <div
-      v-else
-      class="grid gap-4"
-      :style="{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridSize}px, 1fr))` }"
-    >
-      <MediaCard
-        v-for="(file, index) in displayedFiles"
-        :key="file.id"
-        :file="file"
-        @click="openLightbox(index)"
-      />
-    </div>
-
-    <!-- Loading more indicator -->
-    <div v-if="displayLimit < files.length" class="flex justify-center p-4">
-      <span class="loading loading-spinner text-primary"></span>
+    <div v-else v-bind="wrapperProps">
+      <div
+        v-for="row in list"
+        :key="row.index"
+        class="grid gap-4 mb-4"
+        :style="{
+          gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          height: `${rowHeight - 16}px`
+        }"
+      >
+        <MediaCard
+          v-for="(file, i) in row.data"
+          :key="file.id"
+          :file="file"
+          @click="openLightbox(row.index * columns + i)"
+        />
+      </div>
     </div>
   </div>
 </template>
