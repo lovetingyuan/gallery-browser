@@ -353,6 +353,8 @@ onUnmounted(() => {
 });
 
 // Virtual List setup
+const containerWidth = ref(0);
+
 const columns = computed(() => {
   if (!containerWidth.value) {return 1;}
   const availableWidth = containerWidth.value - 32; // p-4 adds 16px padding on left/right
@@ -382,7 +384,10 @@ const { list, containerProps, wrapperProps } = useVirtualList(rows, {
   overscan: 5,
 });
 
-const { width: containerWidth } = useElementSize(containerProps.ref);
+const { width } = useElementSize(containerProps.ref);
+watch(width, (newWidth) => {
+  containerWidth.value = newWidth;
+}, { immediate: true });
 
 </script>
 
