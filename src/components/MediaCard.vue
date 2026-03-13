@@ -18,27 +18,40 @@ const error = ref<string | null>(null);
 
 const containerRef = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
+let loadTimer: ReturnType<typeof setTimeout> | null = null;
+let isUnmounted = false;
 
 const loadMedia = async () => {
-  if (objectUrl.value || isLoading.value || error.value) {
+  if (objectUrl.value || isLoading.value || error.value || isUnmounted) {
     return;
   }
 
   try {
     isLoading.value = true;
     const file = await props.file.handle.getFile();
+    if (isUnmounted) {
+      return;
+    }
     objectUrl.value = URL.createObjectURL(file);
   } catch (err: any) {
+    if (isUnmounted) {
+      return;
+    }
     console.error("Failed to load media:", err);
     error.value = "Failed to load media";
   } finally {
-    isLoading.value = false;
+    if (!isUnmounted) {
+      isLoading.value = false;
+    }
   }
 };
 
 const unloadMedia = () => {
   if (objectUrl.value) {
-    URL.revokeObjectURL(objectUrl.value);
+    const url = objectUrl.value;
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
     objectUrl.value = null;
   }
 };
@@ -50,9 +63,12 @@ onMounted(() => {
         isVisible.value = entry.isIntersecting;
 
         if (entry.isIntersecting) {
+          if (loadTimer) {
+            clearTimeout(loadTimer);
+          }
           // Delay load slightly so fast scrolling doesn't block the main thread
-          setTimeout(() => {
-            if (isVisible.value) {
+          loadTimer = setTimeout(() => {
+            if (isVisible.value && !isUnmounted) {
               loadMedia();
             }
           }, 50);
@@ -76,6 +92,11 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  isUnmounted = true;
+  if (loadTimer) {
+    clearTimeout(loadTimer);
+  }
+
   if (observer && containerRef.value) {
     observer.unobserve(containerRef.value);
     observer.disconnect();

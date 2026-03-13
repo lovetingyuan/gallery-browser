@@ -356,14 +356,18 @@ onUnmounted(() => {
 const containerWidth = ref(0);
 
 const columns = computed(() => {
-  if (!containerWidth.value) {return 1;}
+  if (!containerWidth.value) {
+    return 1;
+  }
   const availableWidth = containerWidth.value - 32; // p-4 adds 16px padding on left/right
   const cols = Math.floor((availableWidth + 16) / (props.gridSize + 16));
   return Math.max(1, cols);
 });
 
 const rowHeight = computed(() => {
-  if (!containerWidth.value) {return props.gridSize + 16;}
+  if (!containerWidth.value) {
+    return props.gridSize + 16;
+  }
   const availableWidth = containerWidth.value - 32;
   const cols = columns.value;
   const itemWidth = (availableWidth - (cols - 1) * 16) / cols;
@@ -385,10 +389,13 @@ const { list, containerProps, wrapperProps } = useVirtualList(rows, {
 });
 
 const { width } = useElementSize(containerProps.ref);
-watch(width, (newWidth) => {
-  containerWidth.value = newWidth;
-}, { immediate: true });
-
+watch(
+  width,
+  (newWidth) => {
+    containerWidth.value = newWidth;
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -409,7 +416,7 @@ watch(width, (newWidth) => {
         class="grid gap-4 mb-4"
         :style="{
           gridTemplateColumns: `repeat(${columns}, 1fr)`,
-          height: `${rowHeight - 16}px`
+          height: `${rowHeight - 16}px`,
         }"
       >
         <MediaCard

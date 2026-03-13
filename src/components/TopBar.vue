@@ -10,6 +10,7 @@ const props = defineProps<{
   selectedExtensions: string[];
   gridSize: number;
   sortBy: SortOption;
+  isSidebarOpen: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -17,6 +18,7 @@ const emit = defineEmits<{
   "update:selectedExtensions": [value: string[]];
   "update:gridSize": [value: number];
   "update:sortBy": [value: SortOption];
+  "toggle-sidebar": [];
 }>();
 
 const handleGridSizeInput = (event: Event) => {
@@ -48,13 +50,22 @@ const toggleExtension = (ext: string) => {
 <template>
   <div class="navbar bg-base-200 shadow-sm z-50 border-b border-base-200 p-0">
     <div
-      class="w-64 md:w-80 flex-none px-4 flex items-center border-r border-base-200 self-stretch"
+      class="flex-none flex items-center self-stretch transition-all duration-300 overflow-hidden"
+      :class="isSidebarOpen ? 'w-64 md:w-80 border-r border-base-200 px-4' : 'w-14 border-r-0 px-2'"
     >
+      <button
+        class="btn btn-ghost btn-circle btn-sm shrink-0 mr-1"
+        @click="emit('toggle-sidebar')"
+        title="Toggle Sidebar"
+      >
+        <Icon icon="heroicons-outline:menu" class="h-5 w-5 text-base-content/70" />
+      </button>
       <a
-        class="btn btn-ghost text-xl normal-case flex items-center gap-2 text-primary whitespace-nowrap overflow-hidden text-ellipsis"
+        class="btn btn-ghost text-xl normal-case flex items-center gap-2 text-primary whitespace-nowrap overflow-hidden text-ellipsis px-1 transition-opacity duration-300"
+        :class="{ 'opacity-0 w-0 p-0': !isSidebarOpen }"
       >
         <!-- Folder Icon -->
-        <Icon icon="heroicons-outline:folder" class="h-6 w-6 text-primary" />
+        <Icon icon="heroicons-outline:folder" class="h-6 w-6 text-primary shrink-0" />
         Gallery Browser
       </a>
     </div>

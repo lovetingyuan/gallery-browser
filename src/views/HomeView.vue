@@ -9,8 +9,15 @@ import MediaGrid from "@/components/MediaGrid.vue";
 const savedGridSize = localStorage.getItem("gallery-grid-size");
 const gridSize = ref(savedGridSize ? Number(savedGridSize) : 200);
 
+const savedSidebarState = localStorage.getItem("gallery-sidebar-open");
+const isSidebarOpen = ref(savedSidebarState ? savedSidebarState === "true" : true);
+
 watch(gridSize, (newVal) => {
   localStorage.setItem("gallery-grid-size", newVal.toString());
+});
+
+watch(isSidebarOpen, (newVal) => {
+  localStorage.setItem("gallery-sidebar-open", newVal.toString());
 });
 
 const {
@@ -37,18 +44,21 @@ const {
       :selected-extensions="selectedExtensions"
       :grid-size="gridSize"
       :sort-by="sortBy"
+      :is-sidebar-open="isSidebarOpen"
       @update:search-query="searchQuery = $event"
       @update:selected-extensions="selectedExtensions = $event"
       @update:grid-size="gridSize = $event"
       @update:sort-by="sortBy = $event"
       @open-directory="openDirectory"
+      @toggle-sidebar="isSidebarOpen = !isSidebarOpen"
     />
 
     <div class="flex-1 flex overflow-hidden relative">
       <aside
-        class="w-64 md:w-80 border-r border-base-200 overflow-y-auto bg-base-100 flex-shrink-0 custom-scrollbar"
+        class="bg-base-100 flex-shrink-0 transition-all duration-300 overflow-hidden"
+        :class="isSidebarOpen ? 'w-64 md:w-80 border-r border-base-200' : 'w-0 border-r-0'"
       >
-        <div class="p-2">
+        <div class="w-64 md:w-80 h-full overflow-y-auto custom-scrollbar p-2">
           <ul v-if="rootNode && !isScanning" class="menu bg-base-100 w-full rounded-box">
             <FolderTree
               :node="rootNode"
