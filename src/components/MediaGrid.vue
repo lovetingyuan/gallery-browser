@@ -71,6 +71,13 @@ const updateZoom = () => {
   }
 };
 
+const updateZoomControlsVisibility = () => {
+  const wrapper = document.getElementById("zoom-controls-wrapper");
+  if (!wrapper) {return;}
+  const isVideo = props.files[currentActiveIndex]?.type === "video";
+  wrapper.style.display = isVideo ? "none" : "flex";
+};
+
 const setupCustomZoom = () => {
   const container = document.getElementById("glightbox-body");
   if (!container) {
@@ -93,17 +100,19 @@ const setupCustomZoom = () => {
       <button id="download-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="下载当前媒体文件">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </button>
-      <div class="w-px h-5 bg-white/30 mx-1"></div>
-      <button id="zoom-out-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="缩小 (Mouse Wheel Down)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-      </button>
-      <div id="zoom-level-display" class="flex items-center justify-center w-12 text-sm font-medium">100%</div>
-      <button id="zoom-in-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="放大 (Mouse Wheel Up)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-      </button>
-      <button id="zoom-reset-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="重置">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-      </button>
+      <div id="zoom-controls-wrapper" class="flex items-center gap-2">
+        <div class="w-px h-5 bg-white/30 mx-1"></div>
+        <button id="zoom-out-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="缩小 (Mouse Wheel Down)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+        </button>
+        <div id="zoom-level-display" class="flex items-center justify-center w-12 text-sm font-medium">100%</div>
+        <button id="zoom-in-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="放大 (Mouse Wheel Up)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+        </button>
+        <button id="zoom-reset-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="重置">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        </button>
+      </div>
     `;
     container.appendChild(controls);
 
@@ -177,6 +186,8 @@ const setupCustomZoom = () => {
       }
     });
   }
+
+  updateZoomControlsVisibility();
 
   const updateDisplay = () => {
     const display = document.getElementById("zoom-level-display");
@@ -261,6 +272,7 @@ onMounted(() => {
   lgInstance.on("slide_changed", (data: any) => {
     currentActiveIndex = data.current.index;
     currentScale = 1;
+    updateZoomControlsVisibility();
     const display = document.getElementById("zoom-level-display");
     if (display) {
       display.textContent = "100%";
