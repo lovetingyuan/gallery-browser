@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { Icon } from "@iconify/vue";
 import type { MediaFile } from "@/types/file-system";
+import { getThumbnail } from "@/utils/thumbnail";
 
 const props = defineProps<{
   file: MediaFile;
@@ -28,11 +29,11 @@ const loadMedia = async () => {
 
   try {
     isLoading.value = true;
-    const file = await props.file.handle.getFile();
+    const url = await getThumbnail(props.file);
     if (isUnmounted) {
       return;
     }
-    objectUrl.value = URL.createObjectURL(file);
+    objectUrl.value = url;
   } catch (err: any) {
     if (isUnmounted) {
       return;
@@ -48,10 +49,7 @@ const loadMedia = async () => {
 
 const unloadMedia = () => {
   if (objectUrl.value) {
-    const url = objectUrl.value;
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 100);
+    // Thumbnail cache manages the object URL lifecycle, so we just clear our reference
     objectUrl.value = null;
   }
 };
@@ -103,16 +101,6 @@ onUnmounted(() => {
   }
   unloadMedia();
 });
-
-const handlePlay = (e: Event) => {
-  const video = e.target as HTMLVideoElement;
-  video.play().catch(() => {});
-};
-
-const handlePause = (e: Event) => {
-  const video = e.target as HTMLVideoElement;
-  video.pause();
-};
 
 const formatSize = (bytes?: number) => {
   if (bytes === undefined) {
@@ -168,26 +156,23 @@ const tooltipText = computed(() => {
 
     <!-- Loaded State -->
     <template v-else-if="objectUrl">
-      <!-- Image -->
+      <!-- Media Thumbnail (Both image and video use img tag for the thumbnail) -->
       <img
-        v-if="file.type === 'image'"
         :src="objectUrl"
         :alt="file.name"
         class="w-full h-full object-scale-down bg-base-300"
         loading="lazy"
       />
 
-      <!-- Video -->
-      <video
-        v-else-if="file.type === 'video'"
-        :src="objectUrl"
-        class="w-full h-full object-scale-down bg-base-300"
-        muted
-        loop
-        playsinline
-        @mouseenter="handlePlay"
-        @mouseleave="handlePause"
-      ></video>
+      <!-- Play Icon Overlay for Videos -->
+      <div
+        v-if="file.type === 'video'"
+        class="absolute inset-0 flex items-center justify-center pointer-events-none"
+      >
+        <div class="bg-black/50 rounded-full p-2 group-hover:bg-primary/80 transition-colors backdrop-blur-sm">
+          <Icon icon="heroicons-solid:play" class="w-8 h-8 text-white ml-1" />
+        </div>
+      </div>
     </template>
 
     <!-- Overlay Info (Always visible) -->
