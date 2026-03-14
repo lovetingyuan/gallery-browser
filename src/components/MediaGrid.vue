@@ -17,6 +17,7 @@ const props = defineProps<{
 
 // Lightbox state
 let lgInstance: GLightboxInstance | null = null;
+let currentActiveIndex = -1;
 
 // Registry of dynamically created Object URLs
 const objectUrls = new Map<number, string>();
@@ -52,6 +53,7 @@ const formatDate = (timestamp: number) => {
 
 const openLightbox = (index: number) => {
   if (lgInstance) {
+    currentActiveIndex = index;
     lgInstance.setElements(lightboxSources.value);
     lgInstance.openAt(index);
   }
@@ -85,9 +87,13 @@ const setupCustomZoom = () => {
     const controls = document.createElement("div");
     controls.id = "custom-zoom-controls";
     controls.className =
-      "absolute bottom-4 right-4 flex gap-2 bg-black/50 p-2 rounded-lg text-white pointer-events-auto";
+      "absolute bottom-4 right-4 flex gap-2 bg-black/50 p-2 rounded-lg text-white pointer-events-auto items-center";
     controls.style.zIndex = "99999";
     controls.innerHTML = `
+      <button id="download-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="下载当前媒体文件">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </button>
+      <div class="w-px h-5 bg-white/30 mx-1"></div>
       <button id="zoom-out-btn" class="p-2 hover:bg-white/20 rounded cursor-pointer" title="缩小 (Mouse Wheel Down)">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
       </button>
@@ -129,6 +135,46 @@ const setupCustomZoom = () => {
       e.stopPropagation();
       currentScale = 1;
       updateDisplay();
+    });
+
+    document.getElementById("download-btn")?.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (currentActiveIndex === -1 || !props.files[currentActiveIndex]) {return;}
+
+      const fileItem = props.files[currentActiveIndex];
+      if (!fileItem) {return;}
+
+      const btn = e.currentTarget as HTMLButtonElement;
+      
+      try {
+        btn.style.opacity = "0.5";
+        btn.style.pointerEvents = "none";
+        
+        let url = objectUrls.get(currentActiveIndex);
+        let createdUrl = false;
+        
+        if (!url) {
+          const file = await fileItem.handle.getFile();
+          url = URL.createObjectURL(file);
+          createdUrl = true;
+        }
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileItem.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        if (createdUrl) {
+          URL.revokeObjectURL(url);
+        }
+      } catch (err) {
+        console.error("Download failed:", err);
+      } finally {
+        btn.style.opacity = "1";
+        btn.style.pointerEvents = "auto";
+      }
     });
   }
 
@@ -212,7 +258,8 @@ onMounted(() => {
     draggable: true,
   });
 
-  lgInstance.on("slide_changed", () => {
+  lgInstance.on("slide_changed", (data: any) => {
+    currentActiveIndex = data.current.index;
     currentScale = 1;
     const display = document.getElementById("zoom-level-display");
     if (display) {
