@@ -170,14 +170,14 @@ const tooltipText = computed(() => {
         class="absolute inset-0 flex items-center justify-center pointer-events-none"
       >
         <div class="bg-black/50 rounded-full p-2 group-hover:bg-primary/80 transition-colors backdrop-blur-sm">
-          <Icon icon="heroicons-solid:play" class="w-8 h-8 text-white ml-1" />
+          <Icon icon="heroicons-solid:play" class="w-8 h-8 text-white" />
         </div>
       </div>
     </template>
 
     <!-- Overlay Info (Always visible) -->
     <div
-      class="absolute inset-x-0 top-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent pb-8 pt-2 px-2 text-white flex flex-col justify-start"
+      class="absolute inset-x-0 top-0 bg-linear-to-b from-black/80 via-black/40 to-transparent pb-8 pt-2 px-2 text-white flex flex-col justify-start"
     >
       <div class="flex items-center gap-1">
         <Icon v-if="file.type === 'video'" icon="heroicons-outline:video-camera" class="h-4 w-4" />

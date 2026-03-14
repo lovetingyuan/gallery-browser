@@ -6,6 +6,7 @@ import type {
   FileSystemFileHandle,
   MediaType,
 } from "@/types/file-system";
+import { clearThumbnailCache } from "@/utils/thumbnail";
 
 // Define the global window method if typescript doesn't know it
 declare global {
@@ -152,6 +153,7 @@ export function useFileSystem() {
 
       isScanning.value = true;
       error.value = null;
+      clearThumbnailCache();
       allMediaFiles.value = [];
       rootNode.value = null;
       selectedDirectoryPath.value = null;
@@ -176,7 +178,10 @@ export function useFileSystem() {
   };
 
   const selectDirectory = (path: string) => {
-    selectedDirectoryPath.value = path;
+    if (selectedDirectoryPath.value !== path) {
+      clearThumbnailCache();
+      selectedDirectoryPath.value = path;
+    }
   };
 
   const filteredFiles = computed(() => {
