@@ -519,6 +519,15 @@ watch(
       <Icon icon="heroicons-outline:inbox" class="h-16 w-16 mb-4" />
       <p class="text-lg font-medium">No media files found</p>
       <p class="text-sm">Select a directory or adjust your search.</p>
+      <a
+        href="https://github.com/lovetingyuan/gallery-browser"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mt-6 text-base-content/50 hover:text-base-content transition-colors"
+        title="GitHub Repository"
+      >
+        <Icon icon="mdi:github" class="h-8 w-8" />
+      </a>
     </div>
 
     <div v-else v-bind="wrapperProps">
