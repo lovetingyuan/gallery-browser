@@ -18,6 +18,8 @@ const sidebarWidth = ref(savedSidebarWidth ? Number(savedSidebarWidth) : 320);
 const isDragging = ref(false);
 
 const MIN_SIDEBAR_WIDTH = 200;
+const FIRST_USE_GUIDE_KEY = "gallery-first-use-guide-dismissed";
+const isFirstUseGuideOpen = ref(localStorage.getItem(FIRST_USE_GUIDE_KEY) !== "true");
 
 watch(gridSize, (newVal) => {
   localStorage.setItem("gallery-grid-size", newVal.toString());
@@ -64,6 +66,11 @@ const stopDrag = () => {
   window.removeEventListener("mouseup", stopDrag);
 };
 
+const closeFirstUseGuide = () => {
+  isFirstUseGuideOpen.value = false;
+  localStorage.setItem(FIRST_USE_GUIDE_KEY, "true");
+};
+
 const {
   isScanning,
   error,
@@ -102,6 +109,57 @@ const {
     />
 
     <div class="flex-1 flex overflow-hidden relative">
+      <div v-if="isFirstUseGuideOpen" class="modal modal-open">
+        <div class="modal-box max-w-2xl">
+          <div class="flex items-start gap-3">
+            <div
+              class="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary"
+            >
+              <Icon icon="heroicons-outline:shield-check" class="h-6 w-6" />
+            </div>
+            <div class="space-y-4">
+              <div>
+                <h2 class="text-2xl font-bold">欢迎使用 Gallery Browser</h2>
+                <p class="mt-2 text-base-content/70">
+                  感谢使用。这个网页是一个本地优先的图片和视频浏览工具，方便你直接在浏览器里查看电脑里的媒体文件，不需要导入到云端，也不用额外整理到其他地方。
+                </p>
+              </div>
+
+              <div class="space-y-2">
+                <h3 class="text-sm font-semibold uppercase tracking-wide text-base-content/60">
+                  简单使用方法
+                </h3>
+                <ul class="space-y-2 text-sm leading-6 text-base-content/80">
+                  <li>1. 点击右上角的 “Select Folder”，选择你想浏览的本地文件夹。</li>
+                  <li>2. 等待扫描完成后，可以在左侧切换目录，在顶部进行搜索、筛选和排序。</li>
+                  <li>3. 点击缩略图即可查看图片或播放视频。</li>
+                </ul>
+              </div>
+
+              <div class="rounded-2xl border border-success/20 bg-success/10 p-4">
+                <div class="flex items-start gap-3">
+                  <Icon
+                    icon="heroicons-outline:lock-closed"
+                    class="mt-0.5 h-5 w-5 shrink-0 text-success"
+                  />
+                  <div class="space-y-2">
+                    <h3 class="font-semibold text-success">本地工具，数据不会离开你的设备</h3>
+                    <p class="text-sm leading-6 text-base-content/80">
+                      这个工具只会读取你主动授权的本地文件夹。所有文件数据、浏览内容和页面状态都保留在当前设备上，不会上传到任何远程服务，也不会经过服务器中转，你的文件始终留在本机。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-action">
+            <button class="btn btn-primary" @click="closeFirstUseGuide">知道了，开始使用</button>
+          </div>
+        </div>
+        <div class="modal-backdrop" @click="closeFirstUseGuide"></div>
+      </div>
+
       <aside
         class="bg-base-100 flex-shrink-0 overflow-hidden"
         :class="[
