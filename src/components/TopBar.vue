@@ -4,6 +4,8 @@ import type { SortOption } from "@/composables/useFileSystem";
 
 const props = defineProps<{
   onOpenDirectory: () => void;
+  onRefreshDirectory: () => void;
+  canRefresh: boolean;
   searchQuery: string;
   isScanning: boolean;
   availableExtensions: string[];
@@ -136,6 +138,20 @@ const toggleExtension = (ext: string) => {
           </ul>
         </div>
       </div>
+
+      <button
+        v-if="canRefresh"
+        class="btn btn-square btn-ghost shrink-0"
+        @click="onRefreshDirectory"
+        :disabled="isScanning"
+        title="Refresh Folder"
+      >
+        <Icon
+          icon="heroicons-outline:refresh"
+          class="h-5 w-5"
+          :class="{ 'animate-spin': isScanning }"
+        />
+      </button>
 
       <button class="btn btn-primary shrink-0" @click="onOpenDirectory" :disabled="isScanning">
         <span v-if="isScanning" class="loading loading-spinner"></span>

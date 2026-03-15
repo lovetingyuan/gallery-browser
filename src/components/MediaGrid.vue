@@ -9,6 +9,7 @@ import { useVirtualList, useElementSize } from "@vueuse/core";
 import GLightbox from "glightbox";
 import "glightbox/dist/css/glightbox.min.css";
 import type { GLightboxInstance } from "glightbox";
+import { globalSyncWarning } from "@/composables/useGlobalState";
 
 const props = defineProps<{
   files: MediaFile[];
@@ -187,8 +188,11 @@ const setupCustomZoom = () => {
         if (createdUrl) {
           URL.revokeObjectURL(url);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Download failed:", err);
+        if (err.name === "NotFoundError" || err.name === "NotAllowedError") {
+          globalSyncWarning.value = true;
+        }
       } finally {
         btn.style.opacity = "1";
         btn.style.pointerEvents = "auto";
@@ -278,29 +282,32 @@ const lightboxSources = computed(() => {
 onMounted(() => {
   globalClickListener = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    const btn = target.closest('.copy-filename-btn');
+    const btn = target.closest(".copy-filename-btn");
     if (btn) {
       e.stopPropagation();
       const file = props.files[currentActiveIndex];
       if (file) {
-        navigator.clipboard.writeText(file.name).then(() => {
-          if (!btn.hasAttribute('data-original-html')) {
-            btn.setAttribute('data-original-html', btn.innerHTML);
-          }
-          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-          setTimeout(() => {
-            if (document.body.contains(btn)) {
-              btn.innerHTML = btn.getAttribute('data-original-html') || '';
-              btn.removeAttribute('data-original-html');
+        navigator.clipboard
+          .writeText(file.name)
+          .then(() => {
+            if (!btn.hasAttribute("data-original-html")) {
+              btn.setAttribute("data-original-html", btn.innerHTML);
             }
-          }, 2000);
-        }).catch(err => {
-          console.error('Failed to copy filename: ', err);
-        });
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            setTimeout(() => {
+              if (document.body.contains(btn)) {
+                btn.innerHTML = btn.getAttribute("data-original-html") || "";
+                btn.removeAttribute("data-original-html");
+              }
+            }, 2000);
+          })
+          .catch((err) => {
+            console.error("Failed to copy filename: ", err);
+          });
       }
     }
   };
-  document.addEventListener('click', globalClickListener);
+  document.addEventListener("click", globalClickListener);
 
   lgInstance = GLightbox({
     touchNavigation: true,
@@ -414,8 +421,11 @@ onMounted(() => {
           }
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to lazy load media for lightbox:", err);
+      if (err.name === "NotFoundError" || err.name === "NotAllowedError") {
+        globalSyncWarning.value = true;
+      }
       const metaEl = slideNode.querySelector(".media-meta");
       if (metaEl) {
         metaEl.innerHTML = "加载信息失败";
@@ -444,7 +454,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (globalClickListener) {
-    document.removeEventListener('click', globalClickListener);
+    document.removeEventListener("click", globalClickListener);
   }
   if (wheelListener) {
     window.removeEventListener("wheel", wheelListener);

@@ -2,6 +2,7 @@
 import { ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { useFileSystem } from "@/composables/useFileSystem";
+import { globalSyncWarning } from "@/composables/useGlobalState";
 import TopBar from "@/components/TopBar.vue";
 import FolderTree from "@/components/FolderTree.vue";
 import MediaGrid from "@/components/MediaGrid.vue";
@@ -31,7 +32,9 @@ const {
   availableExtensions,
   filteredFiles,
   openDirectory,
+  refreshDirectory,
   selectDirectory,
+  currentDirHandle,
 } = useFileSystem();
 </script>
 
@@ -45,11 +48,13 @@ const {
       :grid-size="gridSize"
       :sort-by="sortBy"
       :is-sidebar-open="isSidebarOpen"
+      :can-refresh="!!currentDirHandle"
       @update:search-query="searchQuery = $event"
       @update:selected-extensions="selectedExtensions = $event"
       @update:grid-size="gridSize = $event"
       @update:sort-by="sortBy = $event"
       @open-directory="openDirectory"
+      @refresh-directory="refreshDirectory"
       @toggle-sidebar="isSidebarOpen = !isSidebarOpen"
     />
 
@@ -86,10 +91,21 @@ const {
         <MediaGrid :files="filteredFiles" :grid-size="gridSize" />
       </main>
 
-      <div v-if="error" class="toast toast-bottom toast-end z-50">
-        <div class="alert alert-error">
+      <div v-if="error || globalSyncWarning" class="toast toast-bottom toast-end z-50">
+        <div v-if="error" class="alert alert-error">
           <Icon icon="heroicons-outline:x-circle" class="stroke-current shrink-0 h-6 w-6" />
           <span>{{ error }}</span>
+        </div>
+
+        <div v-if="globalSyncWarning" class="alert alert-warning">
+          <Icon
+            icon="heroicons-outline:exclamation-triangle"
+            class="stroke-current shrink-0 h-6 w-6"
+          />
+          <span>部分文件似乎已在外部被修改，请点击右上角刷新按钮同步最新状态。</span>
+          <button class="btn btn-sm btn-circle btn-ghost" @click="globalSyncWarning = false">
+            ✕
+          </button>
         </div>
       </div>
     </div>

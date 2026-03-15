@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import { Icon } from "@iconify/vue";
 import type { MediaFile } from "@/types/file-system";
 import { getThumbnail } from "@/utils/thumbnail";
+import { globalSyncWarning } from "@/composables/useGlobalState";
 
 const props = defineProps<{
   file: MediaFile;
@@ -40,6 +41,9 @@ const loadMedia = async () => {
     }
     console.error("Failed to load media:", err);
     error.value = "Failed to load media";
+    if (err.name === "NotFoundError" || err.name === "NotAllowedError") {
+      globalSyncWarning.value = true;
+    }
   } finally {
     if (!isUnmounted) {
       isLoading.value = false;

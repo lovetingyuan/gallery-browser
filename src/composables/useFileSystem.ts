@@ -32,6 +32,7 @@ export function useFileSystem() {
   const isScanning = ref(false);
   const error = ref<string | null>(null);
   const rootNode = ref<DirectoryNode | null>(null);
+  const currentDirHandle = shallowRef<FileSystemDirectoryHandle | null>(null);
 
   // Use shallowRef for performance with large arrays
   const allMediaFiles = shallowRef<MediaFile[]>([]);
@@ -169,6 +170,7 @@ export function useFileSystem() {
       rootNode.value = null;
       selectedDirectoryPath.value = null;
       selectedExtensions.value = [];
+      currentDirHandle.value = dirHandle;
 
       const { node, files } = await traverseDirectory(dirHandle, "");
 
@@ -192,6 +194,49 @@ export function useFileSystem() {
     if (selectedDirectoryPath.value !== path) {
       clearThumbnailCache();
       selectedDirectoryPath.value = path;
+    }
+  };
+
+  const refreshDirectory = async () => {
+    if (!currentDirHandle.value) {
+      return;
+    }
+
+    try {
+      isScanning.value = true;
+      error.value = null;
+      clearThumbnailCache();
+      allMediaFiles.value = [];
+      rootNode.value = null;
+
+      // Keep previous selections
+      const oldSelectedPath = selectedDirectoryPath.value;
+
+      const { node, files } = await traverseDirectory(currentDirHandle.value, "");
+
+      rootNode.value = node;
+      allMediaFiles.value = files;
+
+      // Try to restore previous selection if it still exists
+      if (oldSelectedPath) {
+        // Just verify if it conceptually could still exist,
+        // or just let it stay. A simple check is to find if any file starts with it,
+        // or if it's the root.
+        const pathStillExists =
+          oldSelectedPath === node.path || files.some((f) => f.path.startsWith(oldSelectedPath));
+        if (pathStillExists) {
+          selectedDirectoryPath.value = oldSelectedPath;
+        } else {
+          selectedDirectoryPath.value = node.path;
+        }
+      } else if (node) {
+        selectedDirectoryPath.value = node.path;
+      }
+    } catch (err: any) {
+      console.error("Error refreshing directory:", err);
+      error.value = err.message || "Failed to refresh directory";
+    } finally {
+      isScanning.value = false;
     }
   };
 
@@ -251,6 +296,8 @@ export function useFileSystem() {
     availableExtensions,
     filteredFiles,
     openDirectory,
+    refreshDirectory,
     selectDirectory,
+    currentDirHandle,
   };
 }
