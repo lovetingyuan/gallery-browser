@@ -7,6 +7,7 @@ import type {
   MediaType,
 } from "@/types/file-system";
 import { clearThumbnailCache } from "@/utils/thumbnail";
+import { yieldToMain } from "@/utils/scheduler";
 
 // Define the global window method if typescript doesn't know it
 declare global {
@@ -96,34 +97,41 @@ export function useFileSystem() {
       }
     }
 
-    // Process files concurrently for fast metadata extraction
-    const filePromises = fileEntries.map(async (fileHandle) => {
-      const mediaType = getMediaType(fileHandle.name);
-      let size = 0;
-      let lastModified = 0;
-      try {
-        const fileData = await fileHandle.getFile();
-        size = fileData.size;
-        lastModified = fileData.lastModified;
-      } catch (e) {
-        console.warn(`Could not read metadata for ${fileHandle.name}`, e);
+    // Process files concurrently in chunks for fast metadata extraction
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < fileEntries.length; i += CHUNK_SIZE) {
+      const chunk = fileEntries.slice(i, i + CHUNK_SIZE);
+      const filePromises = chunk.map(async (fileHandle) => {
+        const mediaType = getMediaType(fileHandle.name);
+        let size = 0;
+        let lastModified = 0;
+        try {
+          const fileData = await fileHandle.getFile();
+          size = fileData.size;
+          lastModified = fileData.lastModified;
+        } catch (e) {
+          console.warn(`Could not read metadata for ${fileHandle.name}`, e);
+        }
+
+        return {
+          id: `${currentPath}/${fileHandle.name}`,
+          name: fileHandle.name,
+          type: mediaType,
+          handle: fileHandle,
+          path: currentPath,
+          size,
+          lastModified,
+        } as MediaFile;
+      });
+
+      const resolvedFiles = await Promise.all(filePromises);
+      for (const file of resolvedFiles) {
+        node.files.push(file);
+        collectedFiles.push(file);
       }
 
-      return {
-        id: `${currentPath}/${fileHandle.name}`,
-        name: fileHandle.name,
-        type: mediaType,
-        handle: fileHandle,
-        path: currentPath,
-        size,
-        lastModified,
-      } as MediaFile;
-    });
-
-    const resolvedFiles = await Promise.all(filePromises);
-    for (const file of resolvedFiles) {
-      node.files.push(file);
-      collectedFiles.push(file);
+      // Yield to main thread to prevent UI freezing
+      await yieldToMain();
     }
 
     // Process subdirectories sequentially to avoid too many open file handles
@@ -136,6 +144,9 @@ export function useFileSystem() {
         node.children.push(childNode);
       }
       collectedFiles = collectedFiles.concat(childFiles);
+
+      // Yield after processing each subdirectory
+      await yieldToMain();
     }
 
     return { node, files: collectedFiles };
