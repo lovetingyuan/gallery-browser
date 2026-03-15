@@ -1,6 +1,6 @@
 # Gallery Browser
 
-A local-first, blazing-fast image and video viewer inside your web browser. 
+A local-first, blazing-fast image and video viewer inside your web browser.
 
 **Live Demo (No backend, your files stay on your device):**
 [https://gallery-browser.tingyuan.in](https://gallery-browser.tingyuan.in)
