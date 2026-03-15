@@ -22,6 +22,9 @@ let currentActiveIndex = -1;
 // Registry of dynamically created Object URLs
 const objectUrls = new Map<number, string>();
 
+// Global click listener for delegating events like copy filename
+let globalClickListener: ((e: MouseEvent) => void) | null = null;
+
 // Custom zoom state
 let currentScale = 1;
 const zoomStep = 0.15;
@@ -257,7 +260,12 @@ const lightboxSources = computed(() => {
       type: file.type === "image" ? "image" : "video",
       title: "",
       description: `<div class="text-left flex flex-col text-sm leading-tight">
-        <div class="font-medium break-all mb-1">${file.name}</div>
+        <div class="font-medium break-all mb-1 flex items-start gap-2">
+          <span>${file.name}</span>
+          <button class="copy-filename-btn p-1 hover:bg-white/20 rounded cursor-pointer shrink-0 transition-colors" title="复制文件名">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
         <div class="media-meta flex flex-col text-xs opacity-90 leading-tight gap-0.5">
           <div>加载中...</div>
         </div>
@@ -268,6 +276,32 @@ const lightboxSources = computed(() => {
 });
 
 onMounted(() => {
+  globalClickListener = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest('.copy-filename-btn');
+    if (btn) {
+      e.stopPropagation();
+      const file = props.files[currentActiveIndex];
+      if (file) {
+        navigator.clipboard.writeText(file.name).then(() => {
+          if (!btn.hasAttribute('data-original-html')) {
+            btn.setAttribute('data-original-html', btn.innerHTML);
+          }
+          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+          setTimeout(() => {
+            if (document.body.contains(btn)) {
+              btn.innerHTML = btn.getAttribute('data-original-html') || '';
+              btn.removeAttribute('data-original-html');
+            }
+          }, 2000);
+        }).catch(err => {
+          console.error('Failed to copy filename: ', err);
+        });
+      }
+    }
+  };
+  document.addEventListener('click', globalClickListener);
+
   lgInstance = GLightbox({
     touchNavigation: true,
     loop: false,
@@ -409,6 +443,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (globalClickListener) {
+    document.removeEventListener('click', globalClickListener);
+  }
   if (wheelListener) {
     window.removeEventListener("wheel", wheelListener);
   }
