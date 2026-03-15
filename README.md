@@ -1,27 +1,17 @@
-# gallery-browser
+# Gallery Browser
 
-This template should help get you started developing with Vue 3 in Vite.
+A local-first, blazing-fast image and video viewer inside your web browser. 
 
-## Recommended IDE Setup
+**Live Demo (No backend, your files stay on your device):**
+[https://gallery-browser.tingyuan.in](https://gallery-browser.tingyuan.in)
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Features
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
+- **Local-First Privacy**: Uses the modern [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API) to read your local folders directly in the browser.
+- **Zero Uploads**: Your media files never leave your computer. There is no backend server.
+- **Fast & Responsive**: Built with Vue 3, Vite, and Tailwind CSS.
+- **Media Support**: Seamlessly views common image formats (JPG, PNG, GIF, WebP, SVG) and videos (MP4, WebM, OGG).
+- **Lightbox**: Immersive full-screen viewing experience powered by GLightbox.
 
 ## Project Setup
 
@@ -39,4 +29,10 @@ npm run dev
 
 ```sh
 npm run build
+```
+
+### Deploy to Cloudflare Pages/Workers
+
+```sh
+npm run deploy
 ```

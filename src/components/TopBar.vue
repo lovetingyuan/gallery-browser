@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
 import type { SortOption } from "@/composables/useFileSystem";
-import logoSrc from "@/assets/logo.svg";
 
 const props = defineProps<{
   onOpenDirectory: () => void;
@@ -72,7 +71,7 @@ const toggleExtension = (ext: string) => {
         :class="{ 'opacity-0 w-0 p-0': !isSidebarOpen }"
       >
         <!-- Custom Logo -->
-        <img :src="logoSrc" alt="Logo" class="h-8 w-8 shrink-0 drop-shadow-sm" />
+        <Icon icon="heroicons-outline:photograph" class="h-8 w-8 shrink-0 drop-shadow-sm" />
         <span class="hidden sm:inline">Gallery Browser</span>
       </a>
     </div>
