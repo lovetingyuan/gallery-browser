@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+@layer utilities {
+  :where(.input, .select, .textarea, .file-input):is(:focus, :focus-within),
+  :where(.checkbox, .radio, .toggle, .range):is(:focus, :focus-visible),
+  :where(.toggle):has(:focus-visible) {
+    outline-offset: 0;
+  }
+}
+
 #app {
   width: 100%;
   min-height: 100vh;
