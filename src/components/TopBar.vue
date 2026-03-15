@@ -53,7 +53,11 @@ const toggleExtension = (ext: string) => {
   <div class="navbar bg-base-200 shadow-sm z-50 border-b border-base-200 p-0">
     <div
       class="flex-none flex items-center self-stretch transition-all duration-300 overflow-hidden"
-      :class="isSidebarOpen ? 'w-64 md:w-80 border-r border-base-200 px-4' : 'w-14 border-r-0 px-2'"
+      :class="
+        isSidebarOpen
+          ? 'w-auto sm:w-64 md:w-80 border-r border-base-200 px-2 sm:px-4'
+          : 'w-14 border-r-0 px-2'
+      "
     >
       <button
         class="btn btn-ghost btn-circle shrink-0 mr-1"
@@ -68,7 +72,7 @@ const toggleExtension = (ext: string) => {
       >
         <!-- Folder Icon -->
         <Icon icon="heroicons-outline:folder" class="h-6 w-6 text-primary shrink-0" />
-        Gallery Browser
+        <span class="hidden sm:inline">Gallery Browser</span>
       </a>
     </div>
 
@@ -153,10 +157,14 @@ const toggleExtension = (ext: string) => {
         />
       </button>
 
-      <button class="btn btn-primary shrink-0" @click="onOpenDirectory" :disabled="isScanning">
+      <button
+        class="btn btn-primary shrink-0 sm:px-4 px-2"
+        @click="onOpenDirectory"
+        :disabled="isScanning"
+      >
         <span v-if="isScanning" class="loading loading-spinner"></span>
-        <Icon v-else icon="heroicons-outline:folder-open" class="h-5 w-5 mr-1" />
-        Select Folder
+        <Icon v-else icon="heroicons-outline:folder-open" class="h-5 w-5 sm:mr-1" />
+        <span class="hidden sm:inline">Select Folder</span>
       </button>
     </div>
   </div>

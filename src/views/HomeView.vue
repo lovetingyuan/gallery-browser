@@ -40,13 +40,19 @@ const startDrag = () => {
 };
 
 const onDrag = (e: MouseEvent) => {
-  if (!isDragging.value) {return;}
+  if (!isDragging.value) {
+    return;
+  }
   const MAX_SIDEBAR_WIDTH = Math.min(800, window.innerWidth * 0.8);
-  
+
   let newWidth = e.clientX;
-  if (newWidth < MIN_SIDEBAR_WIDTH) {newWidth = MIN_SIDEBAR_WIDTH;}
-  if (newWidth > MAX_SIDEBAR_WIDTH) {newWidth = MAX_SIDEBAR_WIDTH;}
-  
+  if (newWidth < MIN_SIDEBAR_WIDTH) {
+    newWidth = MIN_SIDEBAR_WIDTH;
+  }
+  if (newWidth > MAX_SIDEBAR_WIDTH) {
+    newWidth = MAX_SIDEBAR_WIDTH;
+  }
+
   sidebarWidth.value = newWidth;
 };
 
@@ -100,11 +106,14 @@ const {
         class="bg-base-100 flex-shrink-0 overflow-hidden"
         :class="[
           !isDragging ? 'transition-all duration-300' : '',
-          isSidebarOpen ? 'border-r border-base-200' : 'border-r-0'
+          isSidebarOpen ? 'border-r border-base-200' : 'border-r-0',
         ]"
         :style="{ width: isSidebarOpen ? `${sidebarWidth}px` : '0px' }"
       >
-        <div class="h-full overflow-y-auto custom-scrollbar p-2" :style="{ width: `${sidebarWidth}px` }">
+        <div
+          class="h-full overflow-y-auto custom-scrollbar p-2"
+          :style="{ width: `${sidebarWidth}px` }"
+        >
           <ul v-if="rootNode && !isScanning" class="menu bg-base-100 w-full rounded-box">
             <FolderTree
               :node="rootNode"
