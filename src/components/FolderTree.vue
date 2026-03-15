@@ -26,6 +26,16 @@ const handleToggle = (e: Event) => {
 const handleSelect = (path: string) => {
   emit("select", path);
 };
+
+const getFileCount = (n: DirectoryNode): number => {
+  let count = n.files.length;
+  for (const child of n.children) {
+    count += getFileCount(child);
+  }
+  return count;
+};
+
+const totalFiles = computed(() => getFileCount(props.node));
 </script>
 
 <template>
@@ -33,7 +43,7 @@ const handleSelect = (path: string) => {
     <!-- If there are children directories -->
     <details v-if="node.children.length > 0" :open="isOpen" @toggle="handleToggle">
       <summary
-        class="cursor-pointer font-medium"
+        class="cursor-pointer font-medium flex items-center"
         :class="[
           selectedPath === node.path
             ? 'bg-primary text-primary-content hover:bg-primary'
@@ -41,8 +51,9 @@ const handleSelect = (path: string) => {
         ]"
         @click="handleSelect(node.path)"
       >
-        <Icon icon="heroicons-outline:folder" class="h-4 w-4 mr-1 opacity-70" />
-        <span class="truncate" :title="node.name">{{ node.name || "Root" }}</span>
+        <Icon icon="heroicons-outline:folder" class="h-4 w-4 mr-1 opacity-70 shrink-0" />
+        <span class="truncate flex-1" :title="node.name">{{ node.name || "Root" }}</span>
+        <span class="text-xs opacity-50 ml-2 shrink-0">{{ totalFiles }}</span>
       </summary>
       <ul>
         <!-- Recursive call for children -->
@@ -68,8 +79,9 @@ const handleSelect = (path: string) => {
       ]"
       @click="handleSelect(node.path)"
     >
-      <Icon icon="heroicons-outline:folder" class="h-4 w-4 opacity-70" />
-      <span class="truncate" :title="node.name">{{ node.name }}</span>
+      <Icon icon="heroicons-outline:folder" class="h-4 w-4 opacity-70 shrink-0" />
+      <span class="truncate flex-1" :title="node.name">{{ node.name }}</span>
+      <span class="text-xs opacity-50 ml-2 shrink-0">{{ totalFiles }}</span>
     </a>
   </li>
 </template>
