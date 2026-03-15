@@ -23,7 +23,9 @@ class ConcurrencyQueue {
     } finally {
       this.active--;
       const next = this.queue.shift();
-      if (next) {next();}
+      if (next) {
+        next();
+      }
     }
   }
 }
@@ -99,7 +101,7 @@ async function generateImageThumbnail(file: File): Promise<string> {
       const scale = Math.min(
         MAX_THUMBNAIL_DIMENSION / bitmap.width,
         MAX_THUMBNAIL_DIMENSION / bitmap.height,
-        1
+        1,
       );
 
       if (scale === 1) {
@@ -113,7 +115,9 @@ async function generateImageThumbnail(file: File): Promise<string> {
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
-      if (!ctx) {throw new Error("No 2d context");}
+      if (!ctx) {
+        throw new Error("No 2d context");
+      }
 
       ctx.drawImage(bitmap, 0, 0, width, height);
       bitmap.close();
@@ -133,7 +137,7 @@ async function generateImageThumbnail(file: File): Promise<string> {
         const scale = Math.min(
           MAX_THUMBNAIL_DIMENSION / img.width,
           MAX_THUMBNAIL_DIMENSION / img.height,
-          1
+          1,
         );
         if (scale === 1) {
           return resolve(URL.createObjectURL(file));
@@ -143,7 +147,9 @@ async function generateImageThumbnail(file: File): Promise<string> {
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
         const ctx = canvas.getContext("2d");
-        if (!ctx) {return reject(new Error("No 2d context"));}
+        if (!ctx) {
+          return reject(new Error("No 2d context"));
+        }
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         try {
@@ -171,7 +177,9 @@ async function generateVideoThumbnail(file: File): Promise<string> {
     let isCleanedUp = false;
 
     const cleanup = () => {
-      if (isCleanedUp) {return;}
+      if (isCleanedUp) {
+        return;
+      }
       isCleanedUp = true;
       URL.revokeObjectURL(url);
       video.removeAttribute("src");
@@ -192,7 +200,7 @@ async function generateVideoThumbnail(file: File): Promise<string> {
         const scale = Math.min(
           MAX_THUMBNAIL_DIMENSION / video.videoWidth,
           MAX_THUMBNAIL_DIMENSION / video.videoHeight,
-          1
+          1,
         );
         const width = video.videoWidth * scale || MAX_THUMBNAIL_DIMENSION;
         const height = video.videoHeight * scale || MAX_THUMBNAIL_DIMENSION;
@@ -201,7 +209,9 @@ async function generateVideoThumbnail(file: File): Promise<string> {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
-        if (!ctx) {throw new Error("No 2d context");}
+        if (!ctx) {
+          throw new Error("No 2d context");
+        }
 
         ctx.drawImage(video, 0, 0, width, height);
         cleanup();
@@ -234,7 +244,7 @@ function canvasToBlobUrl(canvas: HTMLCanvasElement): Promise<string> {
         }
       },
       "image/jpeg",
-      0.8 // quality
+      0.8, // quality
     );
   });
 }

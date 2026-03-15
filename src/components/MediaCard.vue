@@ -169,7 +169,9 @@ const tooltipText = computed(() => {
         v-if="file.type === 'video'"
         class="absolute inset-0 flex items-center justify-center pointer-events-none"
       >
-        <div class="bg-black/50 rounded-full p-2 group-hover:bg-primary/80 transition-colors backdrop-blur-sm">
+        <div
+          class="bg-black/50 rounded-full p-2 group-hover:bg-primary/80 transition-colors backdrop-blur-sm"
+        >
           <Icon icon="heroicons-solid:play" class="w-8 h-8 text-white" />
         </div>
       </div>

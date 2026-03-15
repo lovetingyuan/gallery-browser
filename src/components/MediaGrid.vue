@@ -73,7 +73,9 @@ const updateZoom = () => {
 
 const updateZoomControlsVisibility = () => {
   const wrapper = document.getElementById("zoom-controls-wrapper");
-  if (!wrapper) {return;}
+  if (!wrapper) {
+    return;
+  }
   const isVideo = props.files[currentActiveIndex]?.type === "video";
   wrapper.style.display = isVideo ? "none" : "flex";
 };
@@ -148,20 +150,24 @@ const setupCustomZoom = () => {
 
     document.getElementById("download-btn")?.addEventListener("click", async (e) => {
       e.stopPropagation();
-      if (currentActiveIndex === -1 || !props.files[currentActiveIndex]) {return;}
+      if (currentActiveIndex === -1 || !props.files[currentActiveIndex]) {
+        return;
+      }
 
       const fileItem = props.files[currentActiveIndex];
-      if (!fileItem) {return;}
+      if (!fileItem) {
+        return;
+      }
 
       const btn = e.currentTarget as HTMLButtonElement;
-      
+
       try {
         btn.style.opacity = "0.5";
         btn.style.pointerEvents = "none";
-        
+
         let url = objectUrls.get(currentActiveIndex);
         let createdUrl = false;
-        
+
         if (!url) {
           const file = await fileItem.handle.getFile();
           url = URL.createObjectURL(file);

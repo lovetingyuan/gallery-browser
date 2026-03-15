@@ -54,7 +54,7 @@ const toggleExtension = (ext: string) => {
       :class="isSidebarOpen ? 'w-64 md:w-80 border-r border-base-200 px-4' : 'w-14 border-r-0 px-2'"
     >
       <button
-        class="btn btn-ghost btn-circle btn-sm shrink-0 mr-1"
+        class="btn btn-ghost btn-circle shrink-0 mr-1"
         @click="emit('toggle-sidebar')"
         title="Toggle Sidebar"
       >
@@ -95,13 +95,13 @@ const toggleExtension = (ext: string) => {
             max="400"
             :value="gridSize"
             @input="handleGridSizeInput"
-            class="range range-xs range-primary w-24"
+            class="range range-sm range-primary w-24"
           />
         </div>
 
         <div class="hidden sm:flex">
           <select
-            class="select select-bordered select-sm max-w-xs"
+            class="select select-bordered max-w-xs"
             :value="sortBy"
             @change="handleSortChange"
           >
@@ -126,7 +126,7 @@ const toggleExtension = (ext: string) => {
               <label class="label cursor-pointer flex justify-start gap-3 p-2">
                 <input
                   type="checkbox"
-                  class="checkbox checkbox-sm"
+                  class="checkbox"
                   :checked="selectedExtensions.includes(ext)"
                   @change="toggleExtension(ext)"
                 />
