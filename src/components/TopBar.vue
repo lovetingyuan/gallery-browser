@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
 import type { SortOption } from "@/composables/useFileSystem";
+import logoSrc from "@/assets/logo.svg";
 
 const props = defineProps<{
   onOpenDirectory: () => void;
@@ -70,8 +71,8 @@ const toggleExtension = (ext: string) => {
         class="btn btn-ghost text-xl normal-case flex items-center gap-2 text-primary whitespace-nowrap overflow-hidden text-ellipsis px-1 transition-opacity duration-300"
         :class="{ 'opacity-0 w-0 p-0': !isSidebarOpen }"
       >
-        <!-- Folder Icon -->
-        <Icon icon="heroicons-outline:folder" class="h-6 w-6 text-primary shrink-0" />
+        <!-- Custom Logo -->
+        <img :src="logoSrc" alt="Logo" class="h-8 w-8 shrink-0 drop-shadow-sm" />
         <span class="hidden sm:inline">Gallery Browser</span>
       </a>
     </div>
@@ -121,7 +122,7 @@ const toggleExtension = (ext: string) => {
         </div>
 
         <div class="dropdown dropdown-end" v-if="availableExtensions.length > 0">
-          <div tabindex="0" role="button" class="btn btn-square btn-outline">
+          <div tabindex="0" role="button" class="btn btn-square btn-soft">
             <Icon icon="heroicons-outline:funnel" class="h-5 w-5" />
           </div>
           <ul
