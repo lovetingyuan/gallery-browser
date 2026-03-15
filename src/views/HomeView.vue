@@ -13,6 +13,12 @@ const gridSize = ref(savedGridSize ? Number(savedGridSize) : 200);
 const savedSidebarState = localStorage.getItem("gallery-sidebar-open");
 const isSidebarOpen = ref(savedSidebarState ? savedSidebarState === "true" : true);
 
+const savedSidebarWidth = localStorage.getItem("gallery-sidebar-width");
+const sidebarWidth = ref(savedSidebarWidth ? Number(savedSidebarWidth) : 320);
+const isDragging = ref(false);
+
+const MIN_SIDEBAR_WIDTH = 200;
+
 watch(gridSize, (newVal) => {
   localStorage.setItem("gallery-grid-size", newVal.toString());
 });
@@ -20,6 +26,37 @@ watch(gridSize, (newVal) => {
 watch(isSidebarOpen, (newVal) => {
   localStorage.setItem("gallery-sidebar-open", newVal.toString());
 });
+
+watch(sidebarWidth, (newVal) => {
+  localStorage.setItem("gallery-sidebar-width", newVal.toString());
+});
+
+const startDrag = () => {
+  isDragging.value = true;
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = "col-resize";
+  window.addEventListener("mousemove", onDrag);
+  window.addEventListener("mouseup", stopDrag);
+};
+
+const onDrag = (e: MouseEvent) => {
+  if (!isDragging.value) {return;}
+  const MAX_SIDEBAR_WIDTH = Math.min(800, window.innerWidth * 0.8);
+  
+  let newWidth = e.clientX;
+  if (newWidth < MIN_SIDEBAR_WIDTH) {newWidth = MIN_SIDEBAR_WIDTH;}
+  if (newWidth > MAX_SIDEBAR_WIDTH) {newWidth = MAX_SIDEBAR_WIDTH;}
+  
+  sidebarWidth.value = newWidth;
+};
+
+const stopDrag = () => {
+  isDragging.value = false;
+  document.body.style.userSelect = "";
+  document.body.style.cursor = "";
+  window.removeEventListener("mousemove", onDrag);
+  window.removeEventListener("mouseup", stopDrag);
+};
 
 const {
   isScanning,
@@ -60,10 +97,14 @@ const {
 
     <div class="flex-1 flex overflow-hidden relative">
       <aside
-        class="bg-base-100 flex-shrink-0 transition-all duration-300 overflow-hidden"
-        :class="isSidebarOpen ? 'w-64 md:w-80 border-r border-base-200' : 'w-0 border-r-0'"
+        class="bg-base-100 flex-shrink-0 overflow-hidden"
+        :class="[
+          !isDragging ? 'transition-all duration-300' : '',
+          isSidebarOpen ? 'border-r border-base-200' : 'border-r-0'
+        ]"
+        :style="{ width: isSidebarOpen ? `${sidebarWidth}px` : '0px' }"
       >
-        <div class="w-64 md:w-80 h-full overflow-y-auto custom-scrollbar p-2">
+        <div class="h-full overflow-y-auto custom-scrollbar p-2" :style="{ width: `${sidebarWidth}px` }">
           <ul v-if="rootNode && !isScanning" class="menu bg-base-100 w-full rounded-box">
             <FolderTree
               :node="rootNode"
@@ -86,6 +127,17 @@ const {
           </div>
         </div>
       </aside>
+
+      <div
+        v-show="isSidebarOpen"
+        class="relative w-0 z-10 flex-shrink-0 cursor-col-resize select-none"
+        @mousedown.prevent="startDrag"
+      >
+        <div
+          class="absolute top-0 bottom-0 -left-1 w-2 hover:bg-primary/50 transition-colors duration-200"
+          :class="isDragging ? 'bg-primary/50' : 'bg-transparent'"
+        ></div>
+      </div>
 
       <main class="flex-1 bg-base-200/50 overflow-hidden relative">
         <MediaGrid :files="filteredFiles" :grid-size="gridSize" />
