@@ -55,6 +55,23 @@ const formatDate = (timestamp: number) => {
   return d.toLocaleString();
 };
 
+const getObjectUrlForFile = async (index: number) => {
+  const existingUrl = objectUrls.get(index);
+  if (existingUrl) {
+    return existingUrl;
+  }
+
+  const fileItem = props.files[index];
+  if (!fileItem) {
+    return null;
+  }
+
+  const file = await fileItem.handle.getFile();
+  const objectUrl = URL.createObjectURL(file);
+  objectUrls.set(index, objectUrl);
+  return objectUrl;
+};
+
 const openLightbox = (index: number) => {
   if (lgInstance) {
     currentActiveIndex = index;
@@ -265,7 +282,7 @@ const lightboxSources = computed(() => {
       title: "",
       description: `<div class="text-left flex flex-col text-sm leading-tight">
         <div class="font-medium break-all mb-1 flex items-start gap-2">
-          <span>${file.name}</span>
+          <span class="open-media-link cursor-pointer hover:underline">${file.name}</span>
           <button class="copy-filename-btn p-1 hover:bg-white/20 rounded cursor-pointer shrink-0 transition-colors" title="复制文件名">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
@@ -280,8 +297,26 @@ const lightboxSources = computed(() => {
 });
 
 onMounted(() => {
-  globalClickListener = (e: MouseEvent) => {
+  globalClickListener = async (e: MouseEvent) => {
     const target = e.target as HTMLElement;
+    const openLink = target.closest(".open-media-link");
+    if (openLink) {
+      e.stopPropagation();
+
+      try {
+        const objectUrl = await getObjectUrlForFile(currentActiveIndex);
+        if (objectUrl) {
+          window.open(objectUrl, "_blank");
+        }
+      } catch (err: any) {
+        console.error("Failed to open media in new tab:", err);
+        if (err.name === "NotFoundError" || err.name === "NotAllowedError") {
+          globalSyncWarning.value = true;
+        }
+      }
+      return;
+    }
+
     const btn = target.closest(".copy-filename-btn");
     if (btn) {
       e.stopPropagation();
