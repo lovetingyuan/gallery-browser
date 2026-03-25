@@ -7,6 +7,9 @@
   :where(.toggle):has(:focus-visible) {
     outline-offset: 0;
   }
+  .input, .select, .textarea {
+    outline-color: hsl(from var(--color-primary) h s calc(l + 20%));
+  }
 }
 
 #app {
